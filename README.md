@@ -15,9 +15,10 @@ SQL Bridge permet a Claude, Copilot, Cursor et autres LLMs d'explorer et interro
 Vous: "Combien d'utilisateurs se sont inscrits aujourd'hui?"
 
 SQL Bridge:
+
 1. Recoit la question en langage naturel
 2. Fournit le schema de votre base au LLM
-3. Le LLM genere: SELECT * FROM users WHERE DATE(created_at) = CURDATE()
+3. Le LLM genere: SELECT \* FROM users WHERE DATE(created_at) = CURDATE()
 4. Execute la requete (lecture seule)
 5. Le LLM formate une reponse agreable:
 
@@ -56,13 +57,13 @@ Le LLM comprendra votre question, generera le SQL, et vous repondra de maniere c
 
 ## Tools disponibles
 
-| Tool | Description |
-|------|-------------|
-| `ask` | **Principal** - Recoit une question naturelle et retourne le schema pour aider le LLM |
-| `execute_sql` | Execute une requete SELECT et retourne les resultats |
-| `list_tables` | Liste toutes les tables de la base |
-| `describe_table` | Affiche la structure d'une table |
-| `sample_data` | Recupere des exemples de donnees |
+| Tool             | Description                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `ask`            | **Principal** - Recoit une question naturelle et retourne le schema pour aider le LLM |
+| `execute_sql`    | Execute une requete SELECT et retourne les resultats                                  |
+| `list_tables`    | Liste toutes les tables de la base                                                    |
+| `describe_table` | Affiche la structure d'une table                                                      |
+| `sample_data`    | Recupere des exemples de donnees                                                      |
 
 ---
 
@@ -75,22 +76,23 @@ Le LLM comprendra votre question, generera le SQL, et vous repondra de maniere c
 
 \`\`\`json
 {
-  "mcpServers": {
-    "sql-bridge": {
-      "command": "sql-bridge-mcp",
-      "env": {
-        "MYSQL_HOST": "localhost",
-        "MYSQL_PORT": "3306",
-        "MYSQL_USER": "root",
-        "MYSQL_PASSWORD": "votre_mot_de_passe",
-        "MYSQL_DATABASE": "votre_base"
-      }
-    }
-  }
+"mcpServers": {
+"sql-bridge": {
+"command": "sql-bridge-mcp",
+"env": {
+"MYSQL_HOST": "localhost",
+"MYSQL_PORT": "3306",
+"MYSQL_USER": "root",
+"MYSQL_PASSWORD": "votre_mot_de_passe",
+"MYSQL_DATABASE": "votre_base"
+}
+}
+}
 }
 \`\`\`
 
 Redemarrez Claude Desktop. Ensuite, dites simplement:
+
 > "Utilise le prompt assistant_sql pour m'aider avec ma base de donnees"
 
 Ou posez directement vos questions!
@@ -101,11 +103,11 @@ Ou posez directement vos questions!
 
 \`\`\`bash
 claude mcp add sql-bridge sql-bridge-mcp \
-  -e MYSQL_HOST=localhost \
-  -e MYSQL_PORT=3306 \
-  -e MYSQL_USER=root \
-  -e MYSQL_PASSWORD=votre_mot_de_passe \
-  -e MYSQL_DATABASE=votre_base
+ -e MYSQL_HOST=localhost \
+ -e MYSQL_PORT=3306 \
+ -e MYSQL_USER=root \
+ -e MYSQL_PASSWORD=votre_mot_de_passe \
+ -e MYSQL_DATABASE=votre_base
 \`\`\`
 
 ---
@@ -116,18 +118,18 @@ Creez `.vscode/mcp.json` :
 
 \`\`\`json
 {
-  "servers": {
-    "sql-bridge": {
-      "command": "sql-bridge-mcp",
-      "env": {
-        "MYSQL_HOST": "localhost",
-        "MYSQL_PORT": "3306",
-        "MYSQL_USER": "root",
-        "MYSQL_PASSWORD": "votre_mot_de_passe",
-        "MYSQL_DATABASE": "votre_base"
-      }
-    }
-  }
+"servers": {
+"sql-bridge": {
+"command": "sql-bridge-mcp",
+"env": {
+"MYSQL_HOST": "localhost",
+"MYSQL_PORT": "3306",
+"MYSQL_USER": "root",
+"MYSQL_PASSWORD": "votre_mot_de_passe",
+"MYSQL_DATABASE": "votre_base"
+}
+}
+}
 }
 \`\`\`
 
@@ -139,18 +141,18 @@ Editez `~/.cursor/mcp.json` :
 
 \`\`\`json
 {
-  "mcpServers": {
-    "sql-bridge": {
-      "command": "sql-bridge-mcp",
-      "env": {
-        "MYSQL_HOST": "localhost",
-        "MYSQL_PORT": "3306",
-        "MYSQL_USER": "root",
-        "MYSQL_PASSWORD": "votre_mot_de_passe",
-        "MYSQL_DATABASE": "votre_base"
-      }
-    }
-  }
+"mcpServers": {
+"sql-bridge": {
+"command": "sql-bridge-mcp",
+"env": {
+"MYSQL_HOST": "localhost",
+"MYSQL_PORT": "3306",
+"MYSQL_USER": "root",
+"MYSQL_PASSWORD": "votre_mot_de_passe",
+"MYSQL_DATABASE": "votre_base"
+}
+}
+}
 }
 \`\`\`
 
@@ -162,23 +164,23 @@ Editez `~/.continue/config.json` :
 
 \`\`\`json
 {
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "sql-bridge-mcp",
-          "env": {
-            "MYSQL_HOST": "localhost",
-            "MYSQL_PORT": "3306",
-            "MYSQL_USER": "root",
-            "MYSQL_PASSWORD": "votre_mot_de_passe",
-            "MYSQL_DATABASE": "votre_base"
-          }
-        }
-      }
-    ]
-  }
+"experimental": {
+"modelContextProtocolServers": [
+{
+"transport": {
+"type": "stdio",
+"command": "sql-bridge-mcp",
+"env": {
+"MYSQL_HOST": "localhost",
+"MYSQL_PORT": "3306",
+"MYSQL_USER": "root",
+"MYSQL_PASSWORD": "votre_mot_de_passe",
+"MYSQL_DATABASE": "votre_base"
+}
+}
+}
+]
+}
 }
 \`\`\`
 
@@ -189,9 +191,11 @@ Editez `~/.continue/config.json` :
 SQL Bridge inclut des prompts pre-configures pour une meilleure experience:
 
 ### `assistant_sql`
+
 Active le mode assistant conversationnel. Le LLM repondra de maniere agreable avec des emojis et bullet points.
 
 ### `query_natural`
+
 Convertit une question specifique en SQL et formate la reponse.
 
 ---
@@ -199,23 +203,30 @@ Convertit une question specifique en SQL et formate la reponse.
 ## Test en local
 
 \`\`\`bash
+
 # Cloner ou telecharger le projet
+
 cd sql-bridge-mcp
 
 # Installer
+
 npm install
 
 # Configurer (editez .env)
+
 cp .env.example .env
 nano .env
 
 # Compiler
+
 npm run build
 
 # Tester
+
 npm test
 
 # Installer globalement en local
+
 npm link
 \`\`\`
 
@@ -240,7 +251,7 @@ npm link
 sudo mysql -u root
 
 CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'mot_de_passe_securise';
-GRANT SELECT ON votre_base.* TO 'sqlbridge'@'localhost';
+GRANT SELECT ON votre_base.\* TO 'sqlbridge'@'localhost';
 FLUSH PRIVILEGES;
 \`\`\`
 
@@ -256,13 +267,13 @@ FLUSH PRIVILEGES;
 
 ## Variables d'environnement
 
-| Variable | Description | Defaut |
-|----------|-------------|--------|
-| `MYSQL_HOST` | Hote MySQL | `localhost` |
-| `MYSQL_PORT` | Port MySQL | `3306` |
-| `MYSQL_USER` | Utilisateur | `root` |
-| `MYSQL_PASSWORD` | Mot de passe | (vide) |
-| `MYSQL_DATABASE` | Base de donnees | (requis) |
+| Variable         | Description     | Defaut      |
+| ---------------- | --------------- | ----------- |
+| `MYSQL_HOST`     | Hote MySQL      | `localhost` |
+| `MYSQL_PORT`     | Port MySQL      | `3306`      |
+| `MYSQL_USER`     | Utilisateur     | `root`      |
+| `MYSQL_PASSWORD` | Mot de passe    | (vide)      |
+| `MYSQL_DATABASE` | Base de donnees | (requis)    |
 
 ---
 
