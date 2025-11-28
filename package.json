@@ -1,0 +1,52 @@
+{
+  "name": "sql-bridge-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server universel pour connecter les LLMs a n'importe quelle base de donnees MySQL",
+  "keywords": [
+    "mcp",
+    "mysql",
+    "llm",
+    "ai",
+    "database",
+    "sql",
+    "claude",
+    "copilot"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "sql-bridge-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "client": "node dist/client.js",
+    "dev": "tsc && node dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "latest",
+    "@modelcontextprotocol/sdk": "latest",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "latest",
+    "lucide-react": "^0.454.0",
+    "mysql2": "latest",
+    "next": "16.0.5",
+    "path": "latest",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
+    "url": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "postcss": "^8.5",
+    "tailwindcss": "4.1.17",
+    "typescript": "^5"
+  }
+}
