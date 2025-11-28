@@ -4,25 +4,44 @@
   "description": "MCP Server universel pour connecter les LLMs a n'importe quelle base de donnees MySQL",
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "mysql",
     "llm",
     "ai",
     "database",
     "sql",
     "claude",
-    "copilot"
+    "copilot",
+    "cursor",
+    "chatgpt"
   ],
+  "homepage": "https://github.com/votre-username/sql-bridge-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/votre-username/sql-bridge-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/votre-username/sql-bridge-mcp"
+  },
   "license": "MIT",
+  "author": "SQL Bridge Contributors",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "sql-bridge-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "client": "node dist/client.js",
-    "dev": "tsc && node dist/index.js",
-    "start": "node dist/index.js"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js",
+    "test": "node dist/client.js"
   },
   "dependencies": {
     "@cfworker/json-schema": "latest",
@@ -48,5 +67,8 @@
     "postcss": "^8.5",
     "tailwindcss": "4.1.17",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

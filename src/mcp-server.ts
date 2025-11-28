@@ -1,6 +1,7 @@
 /**
  * SQL Bridge - MCP Server Universel
  * Permet a n'importe quel LLM d'interagir avec une base MySQL
+ * en langage naturel avec des reponses agreables
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
@@ -66,7 +67,6 @@ function validateTableName(name: unknown): string {
   if (typeof name !== "string" || !name.trim()) {
     throw new McpError(ErrorCode.InvalidParams, "Nom de table requis")
   }
-  // Securite: empecher injection SQL dans les noms de table
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
     throw new McpError(ErrorCode.InvalidParams, "Nom de table invalide (alphanumerique et underscore uniquement)")
   }
@@ -80,12 +80,10 @@ function validateSelectQuery(sql: unknown): string {
 
   const normalized = sql.trim().toUpperCase()
 
-  // Securite: uniquement SELECT autorise
   if (!normalized.startsWith("SELECT")) {
     throw new McpError(ErrorCode.InvalidParams, "Seules les requetes SELECT sont autorisees")
   }
 
-  // Bloquer les operations dangereuses
   const forbidden = [
     "INSERT",
     "UPDATE",
@@ -113,7 +111,59 @@ function validateLimit(limit: unknown): number {
   if (limit === undefined || limit === null) return 50
   const num = typeof limit === "number" ? limit : Number.parseInt(String(limit), 10)
   if (isNaN(num) || num < 1) return 50
-  return Math.min(num, 500) // Max 500 lignes
+  return Math.min(num, 500)
+}
+
+async function getFullSchema(): Promise<{
+  database: string
+  tables: Array<{
+    name: string
+    rows: number
+    comment: string
+    columns: Array<{
+      name: string
+      type: string
+      nullable: boolean
+      key: string | null
+      default: string | null
+    }>
+  }>
+}> {
+  const dbName = getDatabaseName()
+
+  const tables = await query<TableInfo[]>(
+    `SELECT TABLE_NAME, TABLE_ROWS, TABLE_COMMENT 
+     FROM information_schema.TABLES 
+     WHERE TABLE_SCHEMA = ?`,
+    [dbName],
+  )
+
+  const columns = await query<(ColumnInfo & { TABLE_NAME: string })[]>(
+    `SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, 
+            COLUMN_KEY, COLUMN_DEFAULT, COLUMN_COMMENT
+     FROM information_schema.COLUMNS 
+     WHERE TABLE_SCHEMA = ?
+     ORDER BY TABLE_NAME, ORDINAL_POSITION`,
+    [dbName],
+  )
+
+  return {
+    database: dbName,
+    tables: tables.map((table) => ({
+      name: table.TABLE_NAME,
+      rows: table.TABLE_ROWS,
+      comment: table.TABLE_COMMENT || "",
+      columns: columns
+        .filter((c) => c.TABLE_NAME === table.TABLE_NAME)
+        .map((c) => ({
+          name: c.COLUMN_NAME,
+          type: c.COLUMN_TYPE,
+          nullable: c.IS_NULLABLE === "YES",
+          key: c.COLUMN_KEY || null,
+          default: c.COLUMN_DEFAULT,
+        })),
+    })),
+  }
 }
 
 // ============================================
@@ -141,31 +191,47 @@ export function createMcpServer(): Server {
     return {
       tools: [
         {
-          name: "list_tables",
-          description: "Liste toutes les tables de la base de donnees avec leur nombre de lignes et commentaires",
-          inputSchema: {
-            type: "object",
-            properties: {},
-            required: [],
-          },
-        },
-        {
-          name: "describe_table",
-          description: "Affiche la structure d'une table (colonnes, types, cles, valeurs par defaut)",
+          name: "ask",
+          description: `Repond a une question en langage naturel sur la base de donnees.
+          
+IMPORTANT: Ce tool retourne le SCHEMA de la base pour que tu puisses:
+1. Comprendre la structure des tables
+2. Generer la requete SQL appropriee  
+3. Executer la requete avec 'execute_sql'
+4. Formater une reponse agreable pour l'utilisateur
+
+Exemples de questions:
+- "Combien d'utilisateurs se sont inscrits aujourd'hui ?"
+- "Quels sont les 5 derniers produits ajoutes ?"
+- "Montre-moi les commandes de plus de 100 euros"`,
           inputSchema: {
             type: "object",
             properties: {
-              table: {
+              question: {
                 type: "string",
-                description: "Nom de la table a decrire",
+                description: "Question en langage naturel de l'utilisateur",
               },
             },
-            required: ["table"],
+            required: ["question"],
           },
         },
         {
-          name: "select_query",
-          description: "Execute une requete SELECT sur la base de donnees (lecture seule)",
+          name: "execute_sql",
+          description: `Execute une requete SELECT et retourne les resultats.
+          
+IMPORTANT pour formater la reponse:
+- Si peu de resultats: liste-les clairement avec des bullet points
+- Si beaucoup de resultats: fais un resume + montre les plus pertinents
+- Ajoute toujours un petit commentaire contextuel
+- Utilise des emojis si approprie pour rendre la reponse agreable
+
+Exemple de bonne reponse:
+"J'ai trouve 3 utilisateurs inscrits aujourd'hui:
+• Jean Dupont (jean@email.com) - inscrit a 14h32
+• Marie Martin (marie@email.com) - inscrit a 16h45  
+• Pierre Durand (pierre@email.com) - inscrit a 18h20
+
+C'est une bonne journee pour les inscriptions!"`,
           inputSchema: {
             type: "object",
             properties: {
@@ -183,8 +249,31 @@ export function createMcpServer(): Server {
           },
         },
         {
+          name: "list_tables",
+          description: "Liste toutes les tables de la base de donnees avec leur nombre de lignes",
+          inputSchema: {
+            type: "object",
+            properties: {},
+            required: [],
+          },
+        },
+        {
+          name: "describe_table",
+          description: "Affiche la structure detaillee d'une table (colonnes, types, cles)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              table: {
+                type: "string",
+                description: "Nom de la table a decrire",
+              },
+            },
+            required: ["table"],
+          },
+        },
+        {
           name: "sample_data",
-          description: "Recupere un echantillon de donnees d'une table pour comprendre sa structure",
+          description: "Recupere des exemples de donnees d'une table pour comprendre son contenu",
           inputSchema: {
             type: "object",
             properties: {
@@ -194,8 +283,8 @@ export function createMcpServer(): Server {
               },
               limit: {
                 type: "integer",
-                description: "Nombre de lignes (defaut: 10, max: 100)",
-                default: 10,
+                description: "Nombre de lignes (defaut: 5, max: 20)",
+                default: 5,
               },
             },
             required: ["table"],
@@ -214,6 +303,98 @@ export function createMcpServer(): Server {
 
     try {
       switch (name) {
+        case "ask": {
+          const question = args?.question
+          if (typeof question !== "string" || !question.trim()) {
+            throw new McpError(ErrorCode.InvalidParams, "Question requise")
+          }
+
+          const schema = await getFullSchema()
+
+          // Generer une representation lisible du schema
+          let schemaText = `Base de donnees: ${schema.database}\n\n`
+          schemaText += `Tables disponibles (${schema.tables.length}):\n\n`
+
+          for (const table of schema.tables) {
+            schemaText += `📋 ${table.name}`
+            if (table.rows) schemaText += ` (~${table.rows} lignes)`
+            if (table.comment) schemaText += ` - ${table.comment}`
+            schemaText += `\n`
+
+            for (const col of table.columns) {
+              const keyIcon = col.key === "PRI" ? "🔑" : col.key === "MUL" ? "🔗" : "  "
+              schemaText += `   ${keyIcon} ${col.name}: ${col.type}`
+              if (!col.nullable) schemaText += " (requis)"
+              schemaText += `\n`
+            }
+            schemaText += `\n`
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    question: question,
+                    instructions: `
+L'utilisateur a pose cette question: "${question}"
+
+Voici le schema de la base de donnees pour t'aider a construire la requete SQL:
+
+${schemaText}
+
+INSTRUCTIONS:
+1. Analyse la question et identifie les tables/colonnes pertinentes
+2. Construis une requete SELECT appropriee
+3. Utilise le tool 'execute_sql' pour executer la requete
+4. Formate une reponse AGREABLE et LISIBLE pour l'utilisateur:
+   - Utilise des bullet points pour les listes
+   - Ajoute un petit resume ou commentaire
+   - Sois conversationnel et amical
+   - Si pas de resultats, explique gentiment pourquoi
+
+NE RETOURNE PAS de JSON brut a l'utilisateur final!`,
+                    schema: schema,
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          }
+        }
+
+        case "execute_sql": {
+          const sql = validateSelectQuery(args?.sql)
+          const limit = validateLimit(args?.limit)
+
+          const normalizedSql = sql.toUpperCase()
+          const finalSql = normalizedSql.includes("LIMIT") ? sql : `${sql} LIMIT ${limit}`
+
+          const rows = await query<RowDataPacket[]>(finalSql)
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    query: sql,
+                    results: rows,
+                    count: rows.length,
+                    hint: "Formate ces resultats de maniere agreable pour l'utilisateur. Utilise des bullet points, un resume, et sois conversationnel.",
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          }
+        }
+
         case "list_tables": {
           const dbName = getDatabaseName()
           const tables = await query<TableInfo[]>(
@@ -290,38 +471,9 @@ export function createMcpServer(): Server {
           }
         }
 
-        case "select_query": {
-          const sql = validateSelectQuery(args?.sql)
-          const limit = validateLimit(args?.limit)
-
-          // Ajouter LIMIT si non present
-          const normalizedSql = sql.toUpperCase()
-          const finalSql = normalizedSql.includes("LIMIT") ? sql : `${sql} LIMIT ${limit}`
-
-          const rows = await query<RowDataPacket[]>(finalSql)
-
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(
-                  {
-                    success: true,
-                    query: sql,
-                    rows: rows,
-                    count: rows.length,
-                  },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          }
-        }
-
         case "sample_data": {
           const tableName = validateTableName(args?.table)
-          const limit = Math.min(validateLimit(args?.limit), 100)
+          const limit = Math.min(validateLimit(args?.limit), 20)
 
           const rows = await query<RowDataPacket[]>(`SELECT * FROM \`${tableName}\` LIMIT ?`, [limit])
 
@@ -378,56 +530,14 @@ export function createMcpServer(): Server {
     await rateLimiter.checkLimit()
 
     if (uri === "sqlbridge://schema") {
-      const dbName = getDatabaseName()
-
-      // Recuperer toutes les tables
-      const tables = await query<TableInfo[]>(
-        `SELECT TABLE_NAME, TABLE_ROWS, TABLE_COMMENT 
-         FROM information_schema.TABLES 
-         WHERE TABLE_SCHEMA = ?`,
-        [dbName],
-      )
-
-      // Recuperer toutes les colonnes
-      const columns = await query<(ColumnInfo & { TABLE_NAME: string })[]>(
-        `SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, 
-                COLUMN_KEY, COLUMN_DEFAULT, COLUMN_COMMENT
-         FROM information_schema.COLUMNS 
-         WHERE TABLE_SCHEMA = ?
-         ORDER BY TABLE_NAME, ORDINAL_POSITION`,
-        [dbName],
-      )
-
-      // Grouper les colonnes par table
-      const schema = tables.map((table) => ({
-        name: table.TABLE_NAME,
-        rows: table.TABLE_ROWS,
-        comment: table.TABLE_COMMENT || "",
-        columns: columns
-          .filter((c) => c.TABLE_NAME === table.TABLE_NAME)
-          .map((c) => ({
-            name: c.COLUMN_NAME,
-            type: c.COLUMN_TYPE,
-            nullable: c.IS_NULLABLE === "YES",
-            key: c.COLUMN_KEY || null,
-            default: c.COLUMN_DEFAULT,
-          })),
-      }))
+      const schema = await getFullSchema()
 
       return {
         contents: [
           {
             uri,
             mimeType: "application/json",
-            text: JSON.stringify(
-              {
-                database: dbName,
-                tables: schema,
-                tableCount: tables.length,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(schema, null, 2),
           },
         ],
       }
@@ -443,13 +553,14 @@ export function createMcpServer(): Server {
     return {
       prompts: [
         {
-          name: "explore_database",
-          description: "Guide le LLM pour explorer et comprendre la structure de la base de donnees",
+          name: "assistant_sql",
+          description:
+            "Transforme SQL Bridge en assistant conversationnel qui repond aux questions sur la base de donnees",
           arguments: [],
         },
         {
-          name: "query_assistant",
-          description: "Aide a construire des requetes SQL basees sur une question en langage naturel",
+          name: "query_natural",
+          description: "Convertit une question en langage naturel en requete SQL et formate une reponse agreable",
           arguments: [
             {
               name: "question",
@@ -468,38 +579,77 @@ export function createMcpServer(): Server {
   server.setRequestHandler(GetPromptRequestSchema, async (request) => {
     const { name, arguments: args } = request.params
 
-    if (name === "explore_database") {
-      const dbName = getDatabaseName()
+    if (name === "assistant_sql") {
+      const schema = await getFullSchema()
+
+      let schemaDescription = ""
+      for (const table of schema.tables) {
+        schemaDescription += `\n### Table: ${table.name}\n`
+        schemaDescription += `Colonnes: ${table.columns.map((c) => `${c.name} (${c.type})`).join(", ")}\n`
+      }
+
       return {
-        description: "Guide d'exploration de la base de donnees",
+        description: "Assistant SQL conversationnel",
         messages: [
           {
             role: "user",
             content: {
               type: "text",
-              text: `Tu es connecte a la base de donnees MySQL "${dbName}" via SQL Bridge MCP.
+              text: `Tu es un assistant sympathique qui aide les utilisateurs a explorer leur base de donnees MySQL "${schema.database}".
 
-Voici les outils disponibles:
-1. list_tables - Liste toutes les tables
-2. describe_table - Decrit la structure d'une table
-3. sample_data - Recupere des exemples de donnees
-4. select_query - Execute des requetes SELECT
+SCHEMA DE LA BASE:
+${schemaDescription}
 
-Commence par lister les tables disponibles, puis explore leur structure pour comprendre le schema de la base.`,
+OUTILS DISPONIBLES:
+- ask: Pour comprendre une question et obtenir le schema
+- execute_sql: Pour executer des requetes SELECT
+- list_tables: Pour lister les tables
+- describe_table: Pour decrire une table
+- sample_data: Pour voir des exemples de donnees
+
+REGLES DE REPONSE:
+1. Reponds TOUJOURS de maniere conversationnelle et agreable
+2. Utilise des bullet points (•) pour les listes
+3. Ajoute des emojis quand c'est approprie (📊 📋 ✅ ❌ 🔍)
+4. Fais un petit resume ou commentaire sur les resultats
+5. Si pas de resultats, explique gentiment pourquoi
+6. NE MONTRE JAMAIS de JSON brut a l'utilisateur
+
+EXEMPLE DE BONNE REPONSE:
+"J'ai trouve 3 utilisateurs inscrits aujourd'hui! 🎉
+
+• Jean Dupont (jean@email.com) - inscrit a 14h32
+• Marie Martin (marie@email.com) - inscrit a 16h45
+• Pierre Durand (pierre@email.com) - inscrit a 18h20
+
+C'est une bonne journee pour les inscriptions!"
+
+EXEMPLE DE REPONSE SANS RESULTATS:
+"Je n'ai trouve aucun utilisateur inscrit aujourd'hui. 🤔
+C'est peut-etre normal si c'est tot dans la journee, ou alors il y a peut-etre un souci avec le formulaire d'inscription?"
+
+L'utilisateur va te poser des questions. Utilise les outils disponibles pour y repondre.`,
             },
           },
         ],
       }
     }
 
-    if (name === "query_assistant") {
+    if (name === "query_natural") {
       const question = args?.question
       if (!question) {
         throw new McpError(ErrorCode.InvalidParams, "L'argument 'question' est requis")
       }
 
+      const schema = await getFullSchema()
+
+      let schemaDescription = ""
+      for (const table of schema.tables) {
+        schemaDescription += `Table ${table.name}: ${table.columns.map((c) => c.name).join(", ")}\n`
+      }
+
       return {
-        description: "Assistant de requetes SQL",
+        description: "Conversion question naturelle -> SQL -> reponse agreable",
         messages: [
           {
             role: "user",
@@ -507,14 +657,20 @@ Commence par lister les tables disponibles, puis explore leur structure pour com
               type: "text",
               text: `Question de l'utilisateur: "${question}"
 
-Instructions:
-1. Utilise d'abord list_tables pour voir les tables disponibles
-2. Utilise describe_table pour comprendre la structure des tables pertinentes
-3. Construis une requete SELECT appropriee
-4. Execute la requete avec select_query
-5. Explique les resultats a l'utilisateur
+Schema de la base "${schema.database}":
+${schemaDescription}
 
-Important: Seules les requetes SELECT sont autorisees (lecture seule).`,
+INSTRUCTIONS:
+1. Analyse la question pour identifier les tables/colonnes necessaires
+2. Construis une requete SELECT appropriee
+3. Execute-la avec le tool 'execute_sql'
+4. Formate une reponse AGREABLE:
+   - Commence par repondre directement a la question
+   - Utilise des bullet points si plusieurs resultats
+   - Ajoute un emoji pertinent
+   - Termine par un petit commentaire ou suggestion
+
+IMPORTANT: Ne montre JAMAIS le JSON brut. Transforme-le en texte agreable.`,
             },
           },
         ],

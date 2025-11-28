@@ -1,71 +1,74 @@
 # SQL Bridge MCP
 
-**Serveur MCP universel pour connecter n'importe quel LLM a votre base de donnees MySQL.**
+**Serveur MCP universel pour connecter n'importe quel LLM a votre base de donnees MySQL - en langage naturel!**
 
-SQL Bridge permet a Claude, Copilot, et autres LLMs d'explorer et interroger vos bases de donnees MySQL en toute securite (lecture seule).
+[![npm version](https://badge.fury.io/js/sql-bridge-mcp.svg)](https://www.npmjs.com/package/sql-bridge-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+SQL Bridge permet a Claude, Copilot, Cursor et autres LLMs d'explorer et interroger vos bases de donnees MySQL **en langage naturel**, avec des reponses agreables et lisibles.
 
 ---
 
-## Fonctionnalites
+## Fonctionnement
 
-| Tool | Description |
-|------|-------------|
-| `list_tables` | Liste toutes les tables de la base |
-| `describe_table` | Affiche la structure d'une table (colonnes, types, cles) |
-| `select_query` | Execute des requetes SELECT (lecture seule) |
-| `sample_data` | Recupere des exemples de donnees d'une table |
+\`\`\`
+Vous: "Combien d'utilisateurs se sont inscrits aujourd'hui?"
 
-| Resource | Description |
-|----------|-------------|
-| `sqlbridge://schema` | Schema complet de la base (tables + colonnes) |
+SQL Bridge:
+1. Recoit la question en langage naturel
+2. Fournit le schema de votre base au LLM
+3. Le LLM genere: SELECT * FROM users WHERE DATE(created_at) = CURDATE()
+4. Execute la requete (lecture seule)
+5. Le LLM formate une reponse agreable:
 
-| Prompt | Description |
-|--------|-------------|
-| `explore_database` | Guide pour explorer la base |
-| `query_assistant` | Aide a construire des requetes depuis du langage naturel |
+"J'ai trouve 3 utilisateurs inscrits aujourd'hui! 🎉
+• Jean Dupont (jean@email.com) - inscrit a 14h32
+• Marie Martin (marie@email.com) - inscrit a 16h45
+• Pierre Durand (pierre@email.com) - inscrit a 18h20
+
+C'est une bonne journee pour les inscriptions!"
+\`\`\`
 
 ---
 
 ## Installation
 
-### 1. Telecharger et installer
-
 \`\`\`bash
-# Cloner ou telecharger le projet
-cd sql-bridge-mcp
-
-# Installer les dependances
-npm install
-
-# Compiler TypeScript
-npm run build
+npm install -g sql-bridge-mcp
 \`\`\`
 
-### 2. Configurer la connexion MySQL
+---
 
-Creez un fichier `.env` a la racine du projet :
+## Exemples de questions
 
-\`\`\`env
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=votre_mot_de_passe
-MYSQL_DATABASE=nom_de_votre_base
-\`\`\`
+Une fois configure, posez des questions naturelles a votre LLM:
 
-### 3. Tester la connexion
+- "Combien d'utilisateurs se sont inscrits cette semaine?"
+- "Montre-moi les 5 derniers produits ajoutes"
+- "Quels clients ont passe des commandes de plus de 100 euros?"
+- "Liste les utilisateurs avec un email Gmail"
+- "Quel est le produit le plus vendu?"
+- "Y a-t-il des commandes en attente depuis plus de 3 jours?"
 
-\`\`\`bash
-npm run client
-\`\`\`
+Le LLM comprendra votre question, generera le SQL, et vous repondra de maniere conversationnelle.
+
+---
+
+## Tools disponibles
+
+| Tool | Description |
+|------|-------------|
+| `ask` | **Principal** - Recoit une question naturelle et retourne le schema pour aider le LLM |
+| `execute_sql` | Execute une requete SELECT et retourne les resultats |
+| `list_tables` | Liste toutes les tables de la base |
+| `describe_table` | Affiche la structure d'une table |
+| `sample_data` | Recupere des exemples de donnees |
 
 ---
 
 ## Configuration pour les LLMs
 
 ### Claude Desktop (macOS/Windows)
-
-Editez le fichier de configuration Claude :
 
 **macOS** : `~/Library/Application Support/Claude/claude_desktop_config.json`  
 **Windows** : `%APPDATA%\Claude\claude_desktop_config.json`
@@ -74,8 +77,7 @@ Editez le fichier de configuration Claude :
 {
   "mcpServers": {
     "sql-bridge": {
-      "command": "node",
-      "args": ["/chemin/absolu/vers/sql-bridge-mcp/dist/index.js"],
+      "command": "sql-bridge-mcp",
       "env": {
         "MYSQL_HOST": "localhost",
         "MYSQL_PORT": "3306",
@@ -88,37 +90,35 @@ Editez le fichier de configuration Claude :
 }
 \`\`\`
 
-Redemarrez Claude Desktop apres modification.
+Redemarrez Claude Desktop. Ensuite, dites simplement:
+> "Utilise le prompt assistant_sql pour m'aider avec ma base de donnees"
+
+Ou posez directement vos questions!
 
 ---
 
 ### Claude Code (CLI)
 
 \`\`\`bash
-# Ajouter le serveur MCP
-claude mcp add sql-bridge node /chemin/absolu/vers/sql-bridge-mcp/dist/index.js \
+claude mcp add sql-bridge sql-bridge-mcp \
   -e MYSQL_HOST=localhost \
   -e MYSQL_PORT=3306 \
   -e MYSQL_USER=root \
   -e MYSQL_PASSWORD=votre_mot_de_passe \
   -e MYSQL_DATABASE=votre_base
-
-# Verifier l'installation
-claude mcp list
 \`\`\`
 
 ---
 
 ### VS Code + GitHub Copilot
 
-Ajoutez dans vos settings VS Code (`settings.json`) ou creez `.vscode/mcp.json` :
+Creez `.vscode/mcp.json` :
 
 \`\`\`json
 {
   "servers": {
     "sql-bridge": {
-      "command": "node",
-      "args": ["/chemin/absolu/vers/sql-bridge-mcp/dist/index.js"],
+      "command": "sql-bridge-mcp",
       "env": {
         "MYSQL_HOST": "localhost",
         "MYSQL_PORT": "3306",
@@ -135,14 +135,13 @@ Ajoutez dans vos settings VS Code (`settings.json`) ou creez `.vscode/mcp.json` 
 
 ### Cursor
 
-Editez le fichier `~/.cursor/mcp.json` :
+Editez `~/.cursor/mcp.json` :
 
 \`\`\`json
 {
   "mcpServers": {
     "sql-bridge": {
-      "command": "node",
-      "args": ["/chemin/absolu/vers/sql-bridge-mcp/dist/index.js"],
+      "command": "sql-bridge-mcp",
       "env": {
         "MYSQL_HOST": "localhost",
         "MYSQL_PORT": "3306",
@@ -168,8 +167,7 @@ Editez `~/.continue/config.json` :
       {
         "transport": {
           "type": "stdio",
-          "command": "node",
-          "args": ["/chemin/absolu/vers/sql-bridge-mcp/dist/index.js"],
+          "command": "sql-bridge-mcp",
           "env": {
             "MYSQL_HOST": "localhost",
             "MYSQL_PORT": "3306",
@@ -186,105 +184,94 @@ Editez `~/.continue/config.json` :
 
 ---
 
-## Utilisation
+## Prompts MCP
 
-Une fois configure, vous pouvez demander a votre LLM :
+SQL Bridge inclut des prompts pre-configures pour une meilleure experience:
 
-- "Liste les tables de ma base de donnees"
-- "Decris la structure de la table users"
-- "Montre-moi les 10 derniers utilisateurs inscrits"
-- "Combien de commandes ont ete passees ce mois-ci ?"
-- "Quels produits ont un stock inferieur a 10 ?"
+### `assistant_sql`
+Active le mode assistant conversationnel. Le LLM repondra de maniere agreable avec des emojis et bullet points.
 
-Le LLM utilisera automatiquement les tools SQL Bridge pour repondre.
+### `query_natural`
+Convertit une question specifique en SQL et formate la reponse.
+
+---
+
+## Test en local
+
+\`\`\`bash
+# Cloner ou telecharger le projet
+cd sql-bridge-mcp
+
+# Installer
+npm install
+
+# Configurer (editez .env)
+cp .env.example .env
+nano .env
+
+# Compiler
+npm run build
+
+# Tester
+npm test
+
+# Installer globalement en local
+npm link
+\`\`\`
 
 ---
 
 ## Securite
 
-SQL Bridge est concu pour etre sur :
+- **Lecture seule** : Seules les requetes SELECT sont autorisees
+- **Validation stricte** : Noms de tables et requetes valides
+- **Rate limiting** : 5 requetes/seconde max
+- **Pas d'injection SQL** : Requetes parametrees
 
-- **Lecture seule** : Seules les requetes `SELECT` sont autorisees
-- **Validation des inputs** : Les noms de tables et requetes sont valides
-- **Rate limiting** : 5 requetes/seconde maximum
-- **Pas d'injection SQL** : Requetes parametrees et validation stricte
-
-**Operations bloquees** : INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE, GRANT, REVOKE
+**Bloque** : INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE
 
 ---
 
-## Configuration MySQL sur Ubuntu
-
-### Verifier que MySQL est installe
-
-\`\`\`bash
-sudo systemctl status mysql
-\`\`\`
+## Configuration MySQL Ubuntu
 
 ### Creer un utilisateur dedie (recommande)
 
 \`\`\`sql
--- Se connecter a MySQL
 sudo mysql -u root
 
--- Creer un utilisateur pour SQL Bridge
 CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'mot_de_passe_securise';
-
--- Donner les droits de lecture sur votre base
 GRANT SELECT ON votre_base.* TO 'sqlbridge'@'localhost';
-
--- Appliquer les changements
 FLUSH PRIVILEGES;
 \`\`\`
 
-Puis utilisez cet utilisateur dans votre `.env` :
-
-\`\`\`env
-MYSQL_USER=sqlbridge
-MYSQL_PASSWORD=mot_de_passe_securise
-\`\`\`
-
-### Probleme d'authentification auth_socket
-
-Si vous avez l'erreur `Access denied`, MySQL utilise peut-etre `auth_socket` :
+### Probleme auth_socket
 
 \`\`\`bash
-# Se connecter en root
 sudo mysql
-
-# Changer la methode d'authentification
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'nouveau_mot_de_passe';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'nouveau_mdp';
 FLUSH PRIVILEGES;
 \`\`\`
 
 ---
 
-## Structure du projet
+## Variables d'environnement
 
-\`\`\`
-sql-bridge-mcp/
-├── src/
-│   ├── index.ts        # Point d'entree
-│   ├── mcp-server.ts   # Serveur MCP (tools, resources, prompts)
-│   ├── db.ts           # Connexion MySQL
-│   └── client.ts       # Client de test
-├── dist/               # Code compile (apres npm run build)
-├── .env                # Configuration MySQL
-├── package.json
-├── tsconfig.json
-└── README.md
-\`\`\`
+| Variable | Description | Defaut |
+|----------|-------------|--------|
+| `MYSQL_HOST` | Hote MySQL | `localhost` |
+| `MYSQL_PORT` | Port MySQL | `3306` |
+| `MYSQL_USER` | Utilisateur | `root` |
+| `MYSQL_PASSWORD` | Mot de passe | (vide) |
+| `MYSQL_DATABASE` | Base de donnees | (requis) |
 
 ---
 
-## Commandes
+## Publier sur npm
 
-| Commande | Description |
-|----------|-------------|
-| `npm install` | Installer les dependances |
-| `npm run build` | Compiler TypeScript |
-| `npm run start` | Demarrer le serveur MCP |
-| `npm run client` | Executer les tests |
+\`\`\`bash
+npm adduser
+npm publish
+\`\`\`
 
 ---
 
