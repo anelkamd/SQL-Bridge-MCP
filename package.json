@@ -1,6 +1,6 @@
 {
   "name": "sql-bridge-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP Server universel pour connecter les LLMs a n'importe quelle base de donnees MySQL",
   "keywords": [
     "mcp",
@@ -15,13 +15,13 @@
     "cursor",
     "chatgpt"
   ],
-  "homepage": "https://github.com/votre-username/sql-bridge-mcp#readme",
+  "homepage": "https://github.com/anelkamd/sql-bridge-mcp#readme",
   "bugs": {
-    "url": "https://github.com/votre-username/sql-bridge-mcp/issues"
+    "url": "https://github.com/anelkamd/sql-bridge-mcp/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/votre-username/sql-bridge-mcp"
+    "url": "https://github.com/anelkamd/sql-bridge-mcp"
   },
   "license": "MIT",
   "author": "SQL Bridge Contributors",
