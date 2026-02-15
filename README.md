@@ -1,6 +1,8 @@
 # 🔗 SQL Bridge MCP
 
 [![MCP Badge](https://lobehub.com/badge/mcp/anelkamd-sql-bridge-mcp?style=for-the-badge)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
+
+
 **Universal Model Context Protocol (MCP) server that enables AI assistants to interact with MySQL databases using natural language.**
 
 Connect Claude, ChatGPT, Copilot, and other LLMs to your MySQL databases with full security, validation, and ease of use. SQL Bridge MCP provides a secure, read-only interface for database exploration and querying through natural language or SQL.
