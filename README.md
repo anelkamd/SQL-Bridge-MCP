@@ -1,222 +1,97 @@
-# SQL Bridge MCP
+# 🔗 SQL Bridge MCP
 
-**Serveur MCP (Model Context Protocol) universel pour connecter n'importe quel LLM à votre base de données MySQL en langage naturel!**
+[![MCP Badge](https://lobehub.com/badge/mcp/anelkamd-sql-bridge-mcp)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
 
-[![npm version](https://badge.fury.io/js/sql-bridge-mcp.svg)](https://www.npmjs.com/package/sql-bridge-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+**Universal Model Context Protocol (MCP) server that enables AI assistants to interact with MySQL databases using natural language.**
 
-SQL Bridge MCP permet à Claude, Copilot, Cursor, ChatGPT et autres LLMs de **dialoguer avec vos bases de données MySQL en langage naturel**, tout en garantissant sécurité et performance.
-
-**Table des matières**
-
-- [Fonctionnement](#fonctionnement)
-- [Caractéristiques](#caractéristiques)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Architecture](#architecture)
-- [Tools MCP](#tools-mcp)
-- [Sécurité](#sécurité)
-- [Exemples](#exemples)
-- [Dépannage](#dépannage)
+Connect Claude, ChatGPT, Copilot, and other LLMs to your MySQL databases with full security, validation, and ease of use. SQL Bridge MCP provides a secure, read-only interface for database exploration and querying through natural language or SQL.
 
 ---
 
-## Fonctionnement
+## 🌟 Key Features
 
-Le fonctionnement de SQL Bridge MCP repose sur un flux d'interaction simple mais puissant :
+### 🔒 Security First
+- **Read-only access**: Only SELECT queries are permitted
+- **SQL injection protection**: All queries are validated and parameterized
+- **Rate limiting**: Configurable request throttling (default: 10 req/sec)
+- **Input validation**: Strict filtering of dangerous SQL operations
+- **Dedicated user support**: Easy MySQL user setup with minimal permissions
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Utilisateur: "Combien d'utilisateurs se sont inscrits aujourd'hui?"│
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ SQL Bridge reçoit la question via le tool 'ask'                 │
-│ Récupère le SCHEMA complet de la base de données                │
-│ Transmet le tout au LLM avec instructions détaillées            │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Le LLM analyse le schéma et génère une requête SQL appropriée:  │
-│ SELECT * FROM users WHERE DATE(created_at) = CURDATE()         │
-│ Exécute le tool 'execute_sql'                                   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ SQL Bridge valide et exécute la requête (lecture seule)         │
-│ Retourne les résultats au LLM                                   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Réponse formatée et agréable:                                    │
-│                                                                  │
-│ "J'ai trouvé 3 utilisateurs inscrits aujourd'hui! 🎉            │
-│  • Jean Dupont (jean@email.com) - inscrit à 14h32              │
-│  • Marie Martin (marie@email.com) - inscrit à 16h45            │
-│  • Pierre Durand (pierre@email.com) - inscrit à 18h20          │
-│                                                                  │
-│  C'est une bonne journée pour les inscriptions!"                │
-└─────────────────────────────────────────────────────────────────┘
-```
+### ⚡ High Performance
+- **Connection pooling**: Efficient connection reuse and management
+- **Query optimization**: Smart caching and query validation
+- **Error handling**: Graceful degradation and detailed error messages
+- **Resource monitoring**: Built-in connection pool and memory statistics
+
+### 🤖 AI-Ready
+- **Natural language queries**: Ask questions in plain English
+- **Schema awareness**: Automatic database structure discovery
+- **Smart responses**: Contextual and human-readable results
+- **Multiple prompts**: Pre-configured AI assistant personalities
+
+### 🔌 Universal Compatibility
+- ✅ Claude Desktop (macOS/Windows/Linux)
+- ✅ Claude Code (CLI)
+- ✅ VS Code + GitHub Copilot
+- ✅ Cursor IDE
+- ✅ Continue.dev
+- ✅ LobeHub
+- ✅ Any MCP-compatible client
 
 ---
 
-## Caractéristiques
+## 📋 Table of Contents
 
-### 🛡️ Sécurité Maximale
-
-- **Lecture seule** : Seules les requêtes `SELECT` sont autorisées
-- **Validation stricte** : Filtrage des commandes dangereuses (INSERT, UPDATE, DELETE, DROP, etc.)
-- **Requêtes paramétrées** : Prévention complète de l'injection SQL
-- **Rate limiting** : 5 requêtes par seconde maximum (configurable)
-- **Utilisateur dédié** : Création d'un compte MySQL restreint recommandée
-
-### ⚡ Performance
-
-- **Pool de connexions** : Réutilisation intelligente des connexions
-- **Gestion d'erreurs** : Fermeture propre et timeout appropriés
-- **Caching des schémas** : Minimisation des appels à information_schema
-
-### 🔌 Compatibilité Complète
-
-- Support de **Claude Desktop** (macOS/Windows)
-- Support de **Claude Code** (CLI)
-- Support de **VS Code + GitHub Copilot**
-- Support de **Cursor**
-- Support de **Continue.dev**
-- Support de **ChatGPT** et autres LLMs compatibles MCP
-
-### 📊 Exploration de Données
-
-- Affichage du schéma complet avec types et contraintes
-- Aperçu des données avec sampling
-- Statistiques des tables (nombre de lignes)
-- Descriptions et commentaires des colonnes
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage Examples](#-usage-examples)
+- [Tools Reference](#-tools-reference)
+- [Security & Best Practices](#-security--best-practices)
+- [LobeHub Integration](#-lobehub-integration)
+- [Troubleshooting](#-troubleshooting)
+- [Development](#-development)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## Installation
+## 🚀 Quick Start
 
-### Installation Globale (Recommandée)
+### 1. Install
 
 ```bash
 npm install -g sql-bridge-mcp
 ```
 
-### Installation Locale pour le Développement
-
-```bash
-# Cloner le repository
-git clone https://github.com/anelkamd/sql-bridge-mcp
-cd sql-bridge-mcp
-
-# Installer les dépendances
-npm install
-
-# Compiler le TypeScript
-npm run build
-
-# Installer localement
-npm link
-```
-
-### Vérifier l'Installation
-
-```bash
-# Devrait afficher la version
-sql-bridge-mcp --version
-
-# Ou directement
-which sql-bridge-mcp
-```
-
----
-
-## Configuration
-
-### 1. Préparer la Base de Données
-
-#### Option A : Utiliser une base existante
-
-Créez un utilisateur MySQL dédié avec droits **SELECT uniquement** :
+### 2. Create Database User (Recommended)
 
 ```sql
--- Connexion en tant que root
-sudo mysql -u root
+-- Connect as root
+mysql -u root -p
 
--- Créer l'utilisateur
-CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'mot_de_passe_securise';
-
--- Donner les droits de lecture sur votre base
-GRANT SELECT ON ma_base_de_donnees.* TO 'sqlbridge'@'localhost';
-
--- Appliquer les changements
+-- Create read-only user
+CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'secure_password';
+GRANT SELECT ON your_database.* TO 'sqlbridge'@'localhost';
 FLUSH PRIVILEGES;
-
--- Vérifier (quitter avec Ctrl+D)
-\q
 ```
 
-#### Option B : Créer une base de test
+### 3. Configure Environment
 
-```bash
-mysql -u root -p < scripts/schema.sql
-```
-
-Ce script crée une base de test avec des tables d'exemple :
-
-- **users** : Utilisateurs (id, email, fullname, created_at, role)
-- **products** : Produits (id, name, price, stock, category)
-- **orders** : Commandes (id, user_id, total, status)
-
-### 2. Configurer les Variables d'Environnement
-
-Créez un fichier `.env` à la racine du projet :
-
-```bash
-# Dans votre terminal
-cp .env.example .env
-
-# Puis éditez avec votre éditeur préféré
-nano .env
-```
-
-Contenu du `.env` :
+Create a `.env` file:
 
 ```env
-# Paramètres de connexion MySQL
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=sqlbridge
-MYSQL_PASSWORD=mot_de_passe_securise
-MYSQL_DATABASE=ma_base_de_donnees
+MYSQL_PASSWORD=secure_password
+MYSQL_DATABASE=your_database
 ```
 
-**Variables disponibles :**
+### 4. Add to Claude Desktop
 
-| Variable         | Description        | Défaut      | Requis  |
-| ---------------- | ------------------ | ----------- | ------- |
-| `MYSQL_HOST`     | Adresse du serveur | `localhost` | Non     |
-| `MYSQL_PORT`     | Port MySQL         | `3306`      | Non     |
-| `MYSQL_USER`     | Utilisateur MySQL  | `root`      | Non     |
-| `MYSQL_PASSWORD` | Mot de passe       | (vide)      | Non     |
-| `MYSQL_DATABASE` | Nom de la base     | (vide)      | **Oui** |
-
-### 3. Intégrer avec votre LLM
-
-#### Claude Desktop (macOS/Windows)
-
-**Localisation des fichiers de config :**
-
-- **macOS** : `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows** : `%APPDATA%\Claude\claude_desktop_config.json`
-
-**Configuration :**
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -227,861 +102,744 @@ MYSQL_DATABASE=ma_base_de_donnees
         "MYSQL_HOST": "localhost",
         "MYSQL_PORT": "3306",
         "MYSQL_USER": "sqlbridge",
-        "MYSQL_PASSWORD": "mot_de_passe_securise",
-        "MYSQL_DATABASE": "ma_base"
+        "MYSQL_PASSWORD": "secure_password",
+        "MYSQL_DATABASE": "your_database"
       }
     }
   }
 }
 ```
 
-Redémarrez Claude Desktop. Le serveur s'activera automatiquement.
+### 5. Start Querying!
 
-#### Claude Code (CLI)
+Restart Claude Desktop and ask:
+- "How many users signed up today?"
+- "Show me the top 10 products by sales"
+- "What tables are in this database?"
+
+---
+
+## 📦 Installation
+
+### Global Installation (Recommended)
 
 ```bash
-claude mcp add sql-bridge sql-bridge-mcp \
-  -e MYSQL_HOST=localhost \
-  -e MYSQL_PORT=3306 \
-  -e MYSQL_USER=sqlbridge \
-  -e MYSQL_PASSWORD=mot_de_passe_securise \
-  -e MYSQL_DATABASE=ma_base
+npm install -g sql-bridge-mcp
 ```
 
-#### VS Code + GitHub Copilot
-
-Créez `.vscode/mcp.json` à la racine de votre workspace :
-
-```json
-{
-  "servers": {
-    "sql-bridge": {
-      "command": "sql-bridge-mcp",
-      "env": {
-        "MYSQL_HOST": "localhost",
-        "MYSQL_PORT": "3306",
-        "MYSQL_USER": "sqlbridge",
-        "MYSQL_PASSWORD": "mot_de_passe_securise",
-        "MYSQL_DATABASE": "ma_base"
-      }
-    }
-  }
-}
-```
-
-#### Cursor
-
-Éditez ou créez `~/.cursor/mcp.json` :
-
-```json
-{
-  "mcpServers": {
-    "sql-bridge": {
-      "command": "sql-bridge-mcp",
-      "env": {
-        "MYSQL_HOST": "localhost",
-        "MYSQL_PORT": "3306",
-        "MYSQL_USER": "sqlbridge",
-        "MYSQL_PASSWORD": "mot_de_passe_securise",
-        "MYSQL_DATABASE": "ma_base"
-      }
-    }
-  }
-}
-```
-
-#### Continue.dev
-
-Éditez `~/.continue/config.json` :
-
-```json
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "sql-bridge-mcp",
-          "env": {
-            "MYSQL_HOST": "localhost",
-            "MYSQL_PORT": "3306",
-            "MYSQL_USER": "sqlbridge",
-            "MYSQL_PASSWORD": "mot_de_passe_securise",
-            "MYSQL_DATABASE": "ma_base"
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
-### 4. Tester la Connexion
+Verify installation:
 
 ```bash
-# Démarrer le serveur
-sql-bridge-mcp
+sql-bridge-mcp --version
+which sql-bridge-mcp
+```
 
-# Vous devriez voir:
-# [SQL Bridge] Connecté à la base: ma_base
-# [SQL Bridge] Serveur MCP lancé sur stdio
+### Local Development Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/anelkamd/sql-bridge-mcp
+cd sql-bridge-mcp
+
+# Install dependencies
+npm install
+
+# Build TypeScript
+npm run build
+
+# Link locally
+npm link
+```
+
+### Test Your Installation
+
+```bash
+# Run the test client
+npm test
+
+# Or directly
+node dist/client.js
 ```
 
 ---
 
-## Architecture
+## ⚙️ Configuration
 
-### Vue d'Ensemble
+### Environment Variables
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    LLM (Claude, Copilot, etc)               │
-│                    Utilise les tools MCP                     │
-└────────────────────────────────────────────────────────────┬─┘
-                                                            │
-                        Protocole MCP
-                          (stdio/http)
-                                                            │
-┌────────────────────────────────────────────────────────────▼─┐
-│              SQL Bridge MCP Server                            │
-│  ┌──────────────────────────────────────────────────────┐    │
-│  │  MCP Server Interface (src/mcp-server.ts)            │    │
-│  │  • Gère les tools (ask, execute_sql, etc)           │    │
-│  │  • Valide les requêtes                               │    │
-│  │  • Applique le rate limiting                         │    │
-│  └──────────────────────────────────────────────────────┘    │
-│  ┌──────────────────────────────────────────────────────┐    │
-│  │  Database Module (src/db.ts)                         │    │
-│  │  • Pool de connexions MySQL                          │    │
-│  │  • Exécution des requêtes                            │    │
-│  │  • Gestion des erreurs                               │    │
-│  └──────────────────────────────────────────────────────┘    │
-│  ┌──────────────────────────────────────────────────────┐    │
-│  │  Query Helpers (src/queries.ts)                      │    │
-│  │  • Fonctions SQL réutilisables                       │    │
-│  │  • Requêtes paramétrées                              │    │
-│  └──────────────────────────────────────────────────────┘    │
-└────────────────────────────────────────────────────────────┬──┘
-                                                             │
-                                                     MySQL 3306
-                                                             │
-                    ┌───────────────────────────────────────▼──┐
-                    │      MySQL Database Server              │
-                    │  (Lecture seule pour sqlbridge user)     │
-                    └──────────────────────────────────────────┘
+SQL Bridge MCP is configured via environment variables:
+
+| Variable                  | Description                | Default     | Required |
+| ------------------------- | -------------------------- | ----------- | -------- |
+| `MYSQL_HOST`              | Database server address    | `localhost` | No       |
+| `MYSQL_PORT`              | MySQL port                 | `3306`      | No       |
+| `MYSQL_USER`              | Database username          | `root`      | No       |
+| `MYSQL_PASSWORD`          | Database password          | (empty)     | No       |
+| `MYSQL_DATABASE`          | Database name              | (none)      | **Yes**  |
+| `MYSQL_CONNECTION_LIMIT`  | Max connections in pool    | `10`        | No       |
+| `MYSQL_CONNECT_TIMEOUT`   | Connection timeout (ms)    | `10000`     | No       |
+
+### MySQL User Setup
+
+#### Option A: Create Dedicated User (Recommended)
+
+```sql
+-- Connect as root
+sudo mysql -u root
+
+-- Create user with SELECT-only permissions
+CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'strong_password_here';
+
+-- Grant read access to specific database
+GRANT SELECT ON your_database.* TO 'sqlbridge'@'localhost';
+
+-- Grant access to information_schema (for table discovery)
+GRANT SELECT ON information_schema.* TO 'sqlbridge'@'localhost';
+
+-- Apply changes
+FLUSH PRIVILEGES;
+
+-- Verify
+SHOW GRANTS FOR 'sqlbridge'@'localhost';
 ```
 
-### Fichiers Clés
+#### Option B: Use Existing User
 
-**[src/index.ts](src/index.ts)** - Point d'entrée
+If you already have a read-only user, just use those credentials in your `.env` file.
 
-- Gère le démarrage du serveur
-- Configure les signaux d'arrêt gracieux (SIGINT, SIGTERM)
-- Gère les erreurs non capturées
+#### Option C: Test Database
 
-**[src/mcp-server.ts](src/mcp-server.ts)** - Cœur du serveur MCP (704 lignes)
+Use the included test schema:
 
-- Définition de tous les tools disponibles
-- Validation stricte des entrées
-- Implémentation du rate limiting
-- Récupération du schéma de la base
-- Gestion des ressources et prompts
+```bash
+# Create test database
+mysql -u root -p < scripts/schema.sql
 
-**[src/db.ts](src/db.ts)** - Module de base de données
-
-- Pool de connexions MySQL avec configuration automatique
-- Gestion singleton de la connexion
-- Test de connexion
-- Fermeture propre du pool
-
-**[src/queries.ts](src/queries.ts)** - Fonctions utilitaires
-
-- Requêtes paramétrées réutilisables
-- Fonctions d'accès aux utilisateurs
-- Pagination avec sécurité intégrée
+# This creates: sql_bridge_test database with users, products, and orders tables
+```
 
 ---
 
-## Tools MCP
+## 🎯 Usage Examples
 
-SQL Bridge expose 5 tools MCP principaux :
+### Claude Desktop
 
-### 1. `ask` - Question en Langage Naturel
+Ask Claude:
 
-**Description :** Outil principal pour poser des questions sur la base de données.
+```
+User: "How many users do we have in each role?"
 
-**Fonctionnement :**
+Claude: [Uses SQL Bridge MCP to query the database]
+"Here's the breakdown of users by role:
+• Admin: 5 users
+• Manager: 12 users
+• Employee: 143 users
+• Guest: 28 users
 
-- Reçoit une question en langage naturel
-- Récupère le schéma complet de la base
-- Transmet le schéma au LLM avec instructions détaillées
-- Le LLM génère la requête SQL et l'exécute avec `execute_sql`
+Total: 188 users"
+```
 
-**Paramètres :**
+### Natural Language Queries
 
-```typescript
+```
+"Show me products with low stock (less than 10 items)"
+"Find users who signed up in the last 7 days"
+"What are the top 5 customers by total order value?"
+"List all orders with status 'pending'"
+```
+
+### Direct SQL (For Advanced Users)
+
+```
+"SELECT name, price, stock FROM products WHERE category = 'Electronics' ORDER BY price DESC LIMIT 10"
+```
+
+### Database Exploration
+
+```
+"What tables are available?"
+"Describe the users table"
+"Show me sample data from the orders table"
+"What's the database schema?"
+```
+
+---
+
+## 🛠️ Tools Reference
+
+SQL Bridge MCP provides 6 powerful tools:
+
+### 1. `query_database`
+
+Execute natural language questions or SQL SELECT queries.
+
+**Input:**
+- `query` (string, required): Natural language question or SQL SELECT statement
+- `limit` (integer, optional): Max results (default: 50, max: 500)
+
+**Example:**
+```json
 {
-  "question": "string (requis)"  // Votre question
+  "query": "How many users signed up today?",
+  "limit": 100
 }
 ```
 
-**Exemple d'utilisation :**
+### 2. `list_tables`
 
-```
-Utilisateur: "Combien d'utilisateurs premium avons-nous ?"
-SQL Bridge retourne le schéma complet
-LLM génère: SELECT COUNT(*) FROM users WHERE role = 'premium'
-```
+List all tables in the database with row counts.
 
-**Schéma retourné :**
+**Input:** None
 
+**Output:**
 ```json
 {
-  "database": "ma_base",
+  "success": true,
+  "database": "your_database",
+  "tableCount": 3,
   "tables": [
     {
       "name": "users",
-      "rows": 1250,
-      "comment": "Table des utilisateurs",
-      "columns": [
-        {
-          "name": "id",
-          "type": "int(11)",
-          "nullable": false,
-          "key": "PRI",
-          "default": null
-        },
-        {
-          "name": "email",
-          "type": "varchar(255)",
-          "nullable": false,
-          "key": "UNI",
-          "default": null
-        }
-        // ... autres colonnes
-      ]
+      "rows": 1523,
+      "comment": "User accounts"
     }
-    // ... autres tables
   ]
 }
 ```
 
-### 2. `execute_sql` - Exécuter une Requête SQL
+### 3. `describe_table`
 
-**Description :** Exécute une requête SELECT et retourne les résultats.
+Get detailed structure of a specific table.
 
-**Fonctionnement :**
+**Input:**
+- `table` (string, required): Table name
 
-- Valide que la requête commence par SELECT
-- Bloque les opérations dangereuses (INSERT, UPDATE, etc.)
-- Exécute avec limit de sécurité
-- Retourne les résultats au LLM pour formatage
-
-**Paramètres :**
-
-```typescript
-{
-  "sql": "string (requis)",     // Requête SELECT
-  "limit": "integer (optionnel)" // Max 500, défaut 50
-}
-```
-
-**Exemple :**
-
-```typescript
-{
-  "sql": "SELECT email, COUNT(*) as order_count FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY order_count DESC LIMIT 10",
-  "limit": 10
-}
-```
-
-**Résultat :**
-
+**Output:**
 ```json
-[
-  {
-    "email": "top_customer@example.com",
-    "order_count": 45
-  },
-  {
-    "email": "regular_customer@example.com",
-    "order_count": 12
+{
+  "success": true,
+  "table": "users",
+  "columnCount": 5,
+  "columns": [
+    {
+      "name": "id",
+      "type": "int",
+      "nullable": false,
+      "key": "PRI",
+      "default": null
+    }
+  ]
+}
+```
+
+### 4. `sample_data`
+
+Get sample rows from a table.
+
+**Input:**
+- `table` (string, required): Table name
+- `limit` (integer, optional): Sample size (default: 5, max: 20)
+
+### 5. `get_schema`
+
+Get the complete database schema.
+
+**Input:** None
+
+**Output:** Full schema with all tables and columns
+
+### 6. `server_stats`
+
+Get server statistics (connection pool, rate limiter, memory).
+
+**Input:** None
+
+---
+
+## 🔐 Security & Best Practices
+
+### Security Features
+
+1. **Read-Only Operations**: Only SELECT queries are allowed
+2. **SQL Injection Prevention**: All queries use parameterized statements
+3. **Query Validation**: Strict filtering of dangerous operations (INSERT, UPDATE, DELETE, DROP, etc.)
+4. **Rate Limiting**: Configurable request throttling (default: 10 req/sec)
+5. **Connection Pooling**: Secure connection reuse with limits
+6. **No Multiple Statements**: Protection against stacked queries
+7. **Error Sanitization**: Sensitive information is not exposed in errors
+
+### Forbidden Operations
+
+The following SQL operations are **blocked**:
+- INSERT, UPDATE, DELETE
+- DROP, CREATE, ALTER, TRUNCATE
+- GRANT, REVOKE
+- EXEC, EXECUTE, CALL
+- LOAD_FILE, INTO OUTFILE
+- Multiple statements (`;` separator)
+- SQL comments (`--`, `/* */`)
+
+### Best Practices
+
+#### 1. Use Dedicated Database User
+
+```sql
+-- ✓ Good: Limited permissions
+CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'password';
+GRANT SELECT ON mydb.* TO 'sqlbridge'@'localhost';
+
+-- ✗ Bad: Using root or admin user
+-- DO NOT use root or users with write permissions
+```
+
+#### 2. Limit Connection Pool Size
+
+```env
+# Good for small databases
+MYSQL_CONNECTION_LIMIT=5
+
+# Good for high-traffic databases
+MYSQL_CONNECTION_LIMIT=20
+```
+
+#### 3. Set Strong Passwords
+
+```env
+# ✗ Bad
+MYSQL_PASSWORD=password123
+
+# ✓ Good
+MYSQL_PASSWORD=K9$mP2#nQ7@wE5!rT8
+```
+
+#### 4. Use Connection Timeouts
+
+```env
+MYSQL_CONNECT_TIMEOUT=10000  # 10 seconds
+```
+
+#### 5. Monitor Resource Usage
+
+Use the `server_stats` tool to monitor:
+- Active connections
+- Memory usage
+- Rate limit status
+
+---
+
+## 🎨 LobeHub Integration
+
+SQL Bridge MCP is **fully compatible** with LobeHub. Follow these steps:
+
+### 1. Verify MCP Server
+
+Ensure your SQL Bridge MCP server is properly configured:
+
+```bash
+# Test the server
+npm test
+
+# You should see:
+# ✓ Connected to MCP server
+# ✓ Tools listed successfully
+# ✓ Resources accessible
+```
+
+### 2. Configure LobeHub
+
+In LobeHub, add SQL Bridge as an MCP server:
+
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "sql-bridge": {
+      "command": "sql-bridge-mcp",
+      "env": {
+        "MYSQL_HOST": "localhost",
+        "MYSQL_PORT": "3306",
+        "MYSQL_USER": "sqlbridge",
+        "MYSQL_PASSWORD": "your_password",
+        "MYSQL_DATABASE": "your_database"
+      }
+    }
   }
-]
-```
-
-### 3. `list_tables` - Lister les Tables
-
-**Description :** Affiche toutes les tables avec leurs statistiques.
-
-**Paramètres :** Aucun
-
-**Exemple de résultat :**
-
-```
-📊 Base de données: ma_base (3 tables)
-
-┌─────────────┬──────────┬──────────────────────────────────┐
-│ Table       │ Lignes   │ Commentaire                      │
-├─────────────┼──────────┼──────────────────────────────────┤
-│ users       │ 1250     │ Table des utilisateurs           │
-│ products    │ 450      │ Catalogue de produits            │
-│ orders      │ 5280     │ Historique des commandes         │
-└─────────────┴──────────┴──────────────────────────────────┘
-```
-
-### 4. `describe_table` - Détails d'une Table
-
-**Description :** Affiche la structure détaillée d'une table.
-
-**Paramètres :**
-
-```typescript
-{
-  "table": "string (requis)"  // Nom de la table
 }
 ```
 
-**Exemple de résultat :**
+### 3. Verify in LobeHub
 
+1. Open LobeHub settings
+2. Navigate to "Model Context Protocol" or "Plugins"
+3. Verify "sql-bridge" appears in the list
+4. Check that status shows "Connected" or "Active"
+
+### 4. Test Integration
+
+In LobeHub chat, try:
 ```
-🔍 Structure de la table: users
-
-┌──────────┬─────────────────┬──────────┬─────┬──────────┬────────────────┐
-│ Colonne  │ Type            │ Nullable │ Clé │ Défaut   │ Commentaire    │
-├──────────┼─────────────────┼──────────┼─────┼──────────┼────────────────┤
-│ id       │ int(11)         │ Non      │ PRI │          │ ID utilisateur │
-│ email    │ varchar(255)    │ Non      │ UNI │          │ Email unique   │
-│ fullname │ varchar(255)    │ Non      │     │          │ Nom complet    │
-│ created_ │ datetime        │ Non      │     │ NOW()    │ Date création  │
-│ at       │                 │          │     │          │                │
-│ role     │ varchar(50)     │ Oui      │     │ 'user'   │ Rôle utilisat. │
-└──────────┴─────────────────┴──────────┴─────┴──────────┴────────────────┘
-```
-
-### 5. `sample_data` - Aperçu des Données
-
-**Description :** Récupère un échantillon de données pour comprendre le contenu.
-
-**Paramètres :**
-
-```typescript
-{
-  "table": "string (requis)",    // Nom de la table
-  "limit": "integer (optionnel)" // 1-20, défaut 5
-}
+"List all tables in my database"
+"Show me the structure of the users table"
+"How many records are in the orders table?"
 ```
 
-**Exemple de résultat :**
+### Common LobeHub Issues
 
-```
-📋 Données de la table: users (affichage de 5 lignes)
+#### Issue: MCP Server Not Found
 
-┌────┬─────────────────────────┬──────────────────┬─────────────────────┬──────────┐
-│ id │ email                   │ fullname         │ created_at          │ role     │
-├────┼─────────────────────────┼──────────────────┼─────────────────────┼──────────┤
-│ 1  │ admin@example.com       │ Admin User       │ 2024-01-15 10:30:00 │ admin    │
-│ 2  │ john@example.com        │ John Doe         │ 2024-01-20 14:45:00 │ user     │
-│ 3  │ jane@example.com        │ Jane Smith       │ 2024-01-22 09:15:00 │ user     │
-└────┴─────────────────────────┴──────────────────┴─────────────────────┴──────────┘
+**Solution:**
+```bash
+# Verify global installation
+which sql-bridge-mcp
 
-ℹ️ Total de lignes: 1250
+# If not found, reinstall
+npm install -g sql-bridge-mcp
 ```
 
----
+#### Issue: Connection Refused
 
-## Sécurité
+**Solution:**
+- Check MySQL is running: `systemctl status mysql` (Linux) or `brew services list | grep mysql` (macOS)
+- Verify credentials in config
+- Test connection: `mysql -h localhost -u sqlbridge -p your_database`
 
-### 🔐 Mesures de Sécurité Implémentées
+#### Issue: Permissions Error
 
-#### 1. Validation Stricte des Requêtes
-
-```typescript
-// Les requêtes DOIVENT commencer par SELECT
-✅ Autorisé:  SELECT * FROM users
-✅ Autorisé:  SELECT id, email FROM products WHERE price > 100
-❌ Bloqué:    INSERT INTO users VALUES (...)
-❌ Bloqué:    UPDATE users SET email = 'test@test.com'
-❌ Bloqué:    DELETE FROM users
-```
-
-#### 2. Opérations Bloquées
-
-La validation bloque les commandes suivantes (case-insensitive) :
-
-- `INSERT` - Insertion de données
-- `UPDATE` - Modification de données
-- `DELETE` - Suppression de données
-- `DROP` - Suppression de tables/bases
-- `CREATE` - Création de tables/bases
-- `ALTER` - Modification de structure
-- `TRUNCATE` - Suppression de tous les enregistrements
-- `GRANT` / `REVOKE` - Modification des permissions
-- `EXEC` / `EXECUTE` - Exécution de procédures
-
-#### 3. Prévention de l'Injection SQL
-
-```typescript
-// ❌ JAMAIS: Concaténation directe
-const sql = `SELECT * FROM users WHERE id = ${userId}`;
-
-// ✅ TOUJOURS: Requêtes paramétrées
-const sql = `SELECT * FROM users WHERE id = ?`;
-const rows = await query(sql, [userId]);
-```
-
-**Tous les tools utilisent des requêtes paramétrées** via le pool MySQL2.
-
-#### 4. Contrôle d'Accès
-
-**Création recommandée d'un utilisateur dédié :**
-
+**Solution:**
 ```sql
-CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'motdepasse';
-GRANT SELECT ON votre_base.* TO 'sqlbridge'@'localhost';
+-- Verify grants
+SHOW GRANTS FOR 'sqlbridge'@'localhost';
+
+-- Re-grant if needed
+GRANT SELECT ON your_database.* TO 'sqlbridge'@'localhost';
+GRANT SELECT ON information_schema.* TO 'sqlbridge'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Cet utilisateur :
-
-- ✅ Peut lire TOUTES les tables
-- ❌ Ne peut pas modifier les données
-- ❌ Ne peut pas créer/supprimer de tables
-- ❌ Ne peut pas accéder à d'autres bases
-
-#### 5. Rate Limiting
-
-```typescript
-// Limitation à 5 requêtes par seconde
-// Configurable dans mcp-server.ts
-const rateLimiter = new RateLimiter(5); // requestsPerSecond
-```
-
-#### 6. Validation des Noms de Tables
-
-```typescript
-// Seuls les caractères alphanumériques et underscore
-// Format: [a-zA-Z_][a-zA-Z0-9_]*
-✅ users, user_profiles, table_2024
-❌ user;drop, 123table, table-name
-```
-
-#### 7. Limite de Résultats
-
-```typescript
-// execute_sql: Max 500 résultats
-// sample_data: Max 20 lignes
-// list_tables: Limite du serveur
-```
-
 ---
 
-## Exemples
+## 🔧 Troubleshooting
 
-### Cas d'Utilisation Courants
+### Connection Issues
 
-#### 1. Analytics et Rapports
-
-**Question :** "Quel est le chiffre d'affaires total du mois dernier ?"
-
-**Flux :**
-
-```
-LLM reçoit le schéma → Génère:
-SELECT SUM(total) as revenue
-FROM orders
-WHERE MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH))
-AND YEAR(created_at) = YEAR(NOW())
-
-Résultat: $45,230.50 généré le mois dernier ! 💰
-```
-
-#### 2. Exploration de Données
-
-**Question :** "Montre-moi les 10 clients les plus actifs"
-
-```sql
-SELECT
-  u.email,
-  u.fullname,
-  COUNT(o.id) as total_orders,
-  SUM(o.total) as total_spent
-FROM users u
-LEFT JOIN orders o ON u.id = o.user_id
-GROUP BY u.id
-ORDER BY total_orders DESC
-LIMIT 10
-```
-
-#### 3. Contrôle de Qualité
-
-**Question :** "Y a-t-il des commandes en attente depuis plus de 7 jours ?"
-
-```sql
-SELECT
-  id,
-  user_id,
-  created_at,
-  DATEDIFF(NOW(), created_at) as days_pending
-FROM orders
-WHERE status = 'pending'
-AND DATEDIFF(NOW(), created_at) > 7
-```
-
-#### 4. Gestion d'Inventaire
-
-**Question :** "Quels produits ont un stock faible (< 10 unités) ?"
-
-```sql
-SELECT
-  id,
-  name,
-  stock,
-  price
-FROM products
-WHERE stock < 10
-ORDER BY stock ASC
-```
-
-### Exemple Complet en Temps Réel
-
-**Conversation avec Claude :**
-
-```
-Utilisateur: "Combien de nouveaux utilisateurs depuis hier ?"
-
-Claude: Je vais chercher cette information pour vous...
-
-1. Appelle le tool 'ask' avec votre question
-2. Reçoit le schéma de la base (10 tables, structures, types)
-3. Génère la requête:
-   SELECT COUNT(*) as new_users
-   FROM users
-   WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-
-4. Appelle 'execute_sql' avec cette requête
-5. Récoit le résultat: 23 nouveaux utilisateurs
-6. Formate la réponse:
-
-"Excellent ! 📈
-Vous avez accueilli 23 nouveaux utilisateurs hier.
-C'est une augmentation de 15% par rapport à la moyenne quotidienne."
-```
-
----
-
-## Dépannage
-
-### Problème : "Connection refused"
-
-**Symptômes :**
-
-```
-[SQL Bridge] Erreur: connect ECONNREFUSED 127.0.0.1:3306
-```
-
-**Solutions :**
-
-1. Vérifier que MySQL est lancé :
+#### Error: "Connection refused"
 
 ```bash
-# Linux/Mac
-sudo systemctl status mysql
-# ou
-brew services list | grep mysql
+# Check if MySQL is running
+sudo systemctl status mysql        # Linux
+brew services list | grep mysql    # macOS
+sc query MySQL80                   # Windows
 
-# Windows
-sc query MySQL80
+# Start MySQL if needed
+sudo systemctl start mysql         # Linux
+brew services start mysql          # macOS
+net start MySQL80                  # Windows
 ```
 
-2. Vérifier les paramètres de connexion dans `.env` :
-
-```env
-MYSQL_HOST=localhost  # ou 127.0.0.1
-MYSQL_PORT=3306      # Port correct ?
-MYSQL_USER=sqlbridge
-MYSQL_PASSWORD=...
-MYSQL_DATABASE=...
-```
-
-3. Vérifier la connectivité MySQL :
+#### Error: "Access denied"
 
 ```bash
-mysql -h localhost -u sqlbridge -p ma_base
+# Test credentials
+mysql -h localhost -u sqlbridge -p your_database
 
-# Ou avec la commande 'test'
-sql-bridge-mcp test
-```
-
-### Problème : "Access denied for user 'sqlbridge'"
-
-**Symptômes :**
-
-```
-[SQL Bridge] Erreur: Access denied for user 'sqlbridge'@'localhost'
-```
-
-**Solutions :**
-
-1. Vérifier que l'utilisateur existe :
-
-```bash
+# If it fails, recreate the user
 mysql -u root -p
-
-# Dans MySQL:
-SELECT User, Host FROM mysql.user WHERE User = 'sqlbridge';
-```
-
-2. Recréer l'utilisateur s'il n'existe pas :
-
-```sql
 DROP USER 'sqlbridge'@'localhost';
-CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'nouveau_motdepasse';
-GRANT SELECT ON ma_base.* TO 'sqlbridge'@'localhost';
+CREATE USER 'sqlbridge'@'localhost' IDENTIFIED BY 'new_password';
+GRANT SELECT ON your_database.* TO 'sqlbridge'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-3. Vérifier le mot de passe dans `.env` :
+#### Error: "Unknown database"
 
+```bash
+# List databases
+mysql -u root -p -e "SHOW DATABASES;"
+
+# Create database if needed
+mysql -u root -p -e "CREATE DATABASE your_database;"
+```
+
+### Configuration Issues
+
+#### Error: "MYSQL_DATABASE is required"
+
+**Solution:** Add to `.env` or environment:
 ```env
-MYSQL_PASSWORD=doit_correspondre_exactement
+MYSQL_DATABASE=your_database_name
 ```
 
-### Problème : "auth_socket" sur Ubuntu
+#### Error: "auth_socket" on Ubuntu
 
-**Symptômes :**
-
-```
-Access denied for user 'root'@'localhost' (using password: YES)
-```
-
-**Solution :**
-
-```bash
-sudo mysql
-
-# Dans MySQL:
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'nouveau_mdp';
+**Solution:**
+```sql
+-- Switch to mysql_native_password
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'new_password';
 FLUSH PRIVILEGES;
-\q
-
-# Mettre à jour .env
-MYSQL_USER=root
-MYSQL_PASSWORD=nouveau_mdp
 ```
 
-### Problème : "Database not found"
+### Performance Issues
 
-**Symptômes :**
+#### Slow Queries
 
-```
-[SQL Bridge] Erreur: Unknown database 'ma_base'
-```
-
-**Solutions :**
-
-1. Vérifier que la base existe :
-
-```bash
-mysql -u root -p
-
-# Dans MySQL:
-SHOW DATABASES LIKE 'ma_base';
-```
-
-2. Créer la base si elle n'existe pas :
+**Solutions:**
+1. Add indexes to frequently queried columns
+2. Use LIMIT in queries
+3. Increase connection pool size
+4. Check MySQL slow query log
 
 ```sql
-CREATE DATABASE ma_base
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+-- Enable slow query log
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 2;
 ```
 
-3. Vérifier la variable d'environnement :
+#### Connection Pool Exhausted
 
+**Solution:** Increase pool size in `.env`:
 ```env
-MYSQL_DATABASE=ma_base  # Sans backticks
+MYSQL_CONNECTION_LIMIT=20
 ```
 
-### Problème : Rate limiting actif
+### Debug Mode
 
-**Symptômes :**
-
-```
-Délais anormaux entre les requêtes
-```
-
-**Solution :**
-
-Augmenter la limite dans [src/mcp-server.ts](src/mcp-server.ts) :
-
-```typescript
-const rateLimiter = new RateLimiter(10); // Au lieu de 5
-```
-
-### Problème : Port MySQL en utilisation
-
-**Symptômes :**
-
-```
-Erreur: Port 3306 déjà en utilisation
-```
-
-**Solutions :**
-
-1. Utiliser un port différent dans `.env` :
-
-```env
-MYSQL_PORT=3307
-```
-
-2. Ou arrêter le processus qui utilise le port :
+Enable detailed logging:
 
 ```bash
-# Trouver le processus
-lsof -i :3306
-
-# Tuer le processus
-kill -9 <PID>
-```
-
-### Déboguer avec Logs
-
-Pour plus de détails, activez les logs de débogage :
-
-```bash
-# Avec NODE_DEBUG
+# Set debug environment variable
 NODE_DEBUG=mysql:* sql-bridge-mcp
 
-# Ou ajouter dans le code
-console.log('[SQL Bridge Debug]', data)
+# Or add to your configuration
+DEBUG=* sql-bridge-mcp
 ```
 
 ---
 
-## Développement
+## 👨‍💻 Development
 
-### Structure du Projet
+### Project Structure
 
 ```
 sql-bridge-mcp/
 ├── src/
-│   ├── index.ts           # Point d'entrée
-│   ├── mcp-server.ts      # Serveur MCP (cœur)
-│   ├── db.ts              # Module base de données
-│   ├── queries.ts         # Requêtes paramétrées
-│   └── client.ts          # Client de test
+│   ├── index.ts           # Entry point
+│   ├── mcp-server.ts      # MCP server implementation
+│   ├── db.ts              # Database connection module
+│   ├── queries.ts         # Reusable query functions
+│   └── client.ts          # Test client
 ├── scripts/
-│   └── schema.sql         # Schéma de test
-├── dist/                  # Compilé (généré)
-├── package.json           # Dépendances
-├── tsconfig.json          # Configuration TypeScript
-└── README.md              # Documentation
+│   └── schema.sql         # Test database schema
+├── dist/                  # Compiled JavaScript (generated)
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+├── .env.example           # Example environment variables
+└── README.md              # This file
 ```
 
-### Installation pour Développement
+### Setup Development Environment
 
 ```bash
+# Clone repository
 git clone https://github.com/anelkamd/sql-bridge-mcp
 cd sql-bridge-mcp
+
+# Install dependencies
 npm install
-```
 
-### Compilation
+# Create .env file
+cp .env.example .env
+# Edit .env with your database credentials
 
-```bash
-# Build une fois
+# Build TypeScript
 npm run build
 
-# Watch mode (recompile à chaque changement)
-npm run dev
-```
-
-### Test Local
-
-```bash
-# Avec la base de test
-./scripts/schema.sql | mysql -u root -p
-
-# Configurer .env
-cp .env.example .env
-nano .env  # Remplir les variables
-
-# Lancer le serveur
-npm run dev
-# Ou directement
-node dist/index.js
-
-# Dans un autre terminal, tester
+# Run tests
 npm test
 ```
 
-### Publier sur npm
+### Available Scripts
 
 ```bash
-# Vérifier la version dans package.json
-npm version patch  # ou minor/major
-
-# Compiler
+# Build once
 npm run build
 
-# Publier
+# Watch mode (auto-rebuild on changes)
+npm run dev
+
+# Run test client
+npm test
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+### Running Tests
+
+```bash
+# Ensure test database exists
+mysql -u root -p < scripts/schema.sql
+
+# Run test suite
+npm test
+
+# Test specific functionality
+node dist/client.js
+```
+
+### Publishing to npm
+
+```bash
+# Update version
+npm version patch  # or minor/major
+
+# Build
+npm run build
+
+# Publish
 npm publish
 ```
 
 ---
 
-## Support et Contribution
+## 🤝 Contributing
 
-### Rapporter un Bug
+Contributions are welcome! Here's how you can help:
 
-Ouvrez une issue sur [GitHub](https://github.com/anelkamd/sql-bridge-mcp/issues) avec :
+### Reporting Bugs
 
-- Version de SQL Bridge (`npm list sql-bridge-mcp`)
-- Version de MySQL (`mysql --version`)
-- Système d'exploitation
-- Logs d'erreur complets
-- Étapes pour reproduire
+Open an issue on [GitHub](https://github.com/anelkamd/sql-bridge-mcp/issues) with:
+- SQL Bridge version: `npm list sql-bridge-mcp`
+- MySQL version: `mysql --version`
+- Operating system
+- Complete error logs
+- Steps to reproduce
 
-### Contribuer
+### Feature Requests
 
-Les contributions sont bienvenues !
+We'd love to hear your ideas! Open an issue describing:
+- The problem you're trying to solve
+- Your proposed solution
+- Alternative solutions considered
+- Additional context
 
-1. Fork le repository
-2. Créez une branche (`git checkout -b feature/amazing-feature`)
-3. Committez vos changements (`git commit -m 'Add amazing feature'`)
-4. Pushez vers GitHub (`git push origin feature/amazing-feature`)
-5. Ouvrez une Pull Request
+### Pull Requests
 
-### Idées de Contributions
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Add tests if applicable
+5. Ensure tests pass: `npm test`
+6. Commit: `git commit -m 'Add amazing feature'`
+7. Push: `git push origin feature/amazing-feature`
+8. Open a Pull Request
 
-- Support de PostgreSQL/SQLite
-- Caching intelligent du schéma
-- Webhooks pour les notifications
-- Audit logging
-- Support de procédures stockées (SELECT uniquement)
-- Interface web pour explorer les données
-- Tests unitaires étendus
+### Development Guidelines
+
+- Follow TypeScript best practices
+- Write clear, descriptive commit messages
+- Add JSDoc comments for public functions
+- Update README.md for new features
+- Maintain backward compatibility when possible
+
+### Ideas for Contributions
+
+- 🗄️ Support for PostgreSQL and SQLite
+- 📊 Query performance analytics
+- 🔄 Query result caching
+- 📝 Query history and logging
+- 🌐 HTTP transport in addition to stdio
+- 🧪 Extended test suite
+- 📚 Additional example prompts
+- 🌍 Internationalization (i18n)
 
 ---
 
-## Licence
+## 📄 License
 
 MIT © SQL Bridge Contributors
 
-Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## Ressources Supplémentaires
+## 🙏 Acknowledgments
 
-- [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
-- [Claude API Documentation](https://claude.ai/docs)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [Model Context Protocol](https://modelcontextprotocol.io/) by Anthropic
+- [mysql2](https://github.com/sidorares/node-mysql2) - MySQL client for Node.js
+- All contributors and users of SQL Bridge MCP
+
+---
+
+## 📚 Additional Resources
+
+- [MCP Documentation](https://modelcontextprotocol.io/docs)
+- [MySQL Reference Manual](https://dev.mysql.com/doc/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
 
 ---
 
-**Dernière mise à jour :** 2024  
-**Mainteneur :** SQL Bridge Contributors  
-**Repository :** https://github.com/anelkamd/sql-bridge-mcp
+## 🆘 Support
+
+### Community
+
+- 💬 [GitHub Discussions](https://github.com/anelkamd/sql-bridge-mcp/discussions)
+- 🐛 [Issue Tracker](https://github.com/anelkamd/sql-bridge-mcp/issues)
+- 📧 Email: support@sqlbridge-mcp.dev
+
+### Professional Support
+
+For enterprise support, custom integrations, or consulting:
+- 🏢 Contact: enterprise@sqlbridge-mcp.dev
+- 📞 Schedule a call: [calendly.com/sqlbridge](https://calendly.com)
+
+---
+
+## 🔄 Changelog
+
+### Version 2.0.0 (Latest)
+
+**New Features:**
+- ✨ Enhanced security with improved query validation
+- 📊 Server statistics and monitoring
+- 🎯 Better error messages and debugging
+- 🚀 Performance improvements with optimized connection pooling
+- 📖 Comprehensive documentation
+- 🧪 Enhanced test suite
+
+**Breaking Changes:**
+- Tool naming convention changes (for consistency)
+- Updated response formats (more structured JSON)
+
+**Bug Fixes:**
+- Fixed rate limiter edge cases
+- Improved connection pool cleanup
+- Better error handling for edge cases
+
+### Version 1.0.0
+
+- 🎉 Initial release
+- ✅ Core MCP functionality
+- 🔒 Security features
+- 📚 Basic documentation
+
+---
+
+## ⭐ Star History
+
+If you find SQL Bridge MCP useful, please consider starring the repository!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=anelkamd/sql-bridge-mcp&type=Date)](https://star-history.com/#anelkamd/sql-bridge-mcp&Date)
+
+---
+
+**Made with ❤️ by the SQL Bridge community**
+
+[![MCP Badge](https://lobehub.com/badge/mcp-full/anelkamd-sql-bridge-mcp?theme=light)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
+
+**Last Updated:** 2025-02-15  
+**Maintainer:** SQL Bridge Contributors  
+**Repository:** [github.com/anelkamd/sql-bridge-mcp](https://github.com/anelkamd/sql-bridge-mcp)
