@@ -1,7 +1,6 @@
 # 🔗 SQL Bridge MCP
 
-[![MCP Badge](https://lobehub.com/badge/mcp/anelkamd-sql-bridge-mcp)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
-
+[![MCP Badge](https://lobehub.com/badge/mcp/anelkamd-sql-bridge-mcp?style=for-the-badge)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
 **Universal Model Context Protocol (MCP) server that enables AI assistants to interact with MySQL databases using natural language.**
 
 Connect Claude, ChatGPT, Copilot, and other LLMs to your MySQL databases with full security, validation, and ease of use. SQL Bridge MCP provides a secure, read-only interface for database exploration and querying through natural language or SQL.
@@ -837,9 +836,3 @@ If you find SQL Bridge MCP useful, please consider starring the repository!
 ---
 
 **Made with ❤️ by the SQL Bridge community**
-
-[![MCP Badge](https://lobehub.com/badge/mcp-full/anelkamd-sql-bridge-mcp?theme=light)](https://lobehub.com/mcp/anelkamd-sql-bridge-mcp)
-
-**Last Updated:** 2025-02-15  
-**Maintainer:** SQL Bridge Contributors  
-**Repository:** [github.com/anelkamd/sql-bridge-mcp](https://github.com/anelkamd/sql-bridge-mcp)
