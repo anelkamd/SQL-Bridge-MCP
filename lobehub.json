@@ -1,0 +1,49 @@
+{
+  "$schema": "https://registry.lobehub.com/schema.json",
+  "identifier": "sql-bridge-mcp",
+  "author": "SQL Bridge Contributors",
+  "meta": {
+    "avatar": "🔗",
+    "tags": ["database", "mysql", "sql", "query", "natural-language"],
+    "title": "SQL Bridge MCP",
+    "description": "Universal MCP server for connecting AI assistants to MySQL databases with natural language queries",
+    "systemRole": "You are a helpful SQL assistant with access to a MySQL database. Help users explore and query their data using natural language or SQL SELECT statements."
+  },
+  "config": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "sql-bridge-mcp"],
+    "env": {
+      "MYSQL_HOST": {
+        "type": "string",
+        "description": "MySQL server hostname",
+        "default": "localhost"
+      },
+      "MYSQL_PORT": {
+        "type": "number",
+        "description": "MySQL server port",
+        "default": 3306
+      },
+      "MYSQL_USER": {
+        "type": "string",
+        "description": "MySQL username",
+        "required": true
+      },
+      "MYSQL_PASSWORD": {
+        "type": "string",
+        "description": "MySQL password",
+        "required": true
+      },
+      "MYSQL_DATABASE": {
+        "type": "string",
+        "description": "MySQL database name",
+        "required": true
+      }
+    }
+  },
+  "homepage": "https://github.com/anelkamd/sql-bridge-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anelkamd/sql-bridge-mcp.git"
+  }
+}
