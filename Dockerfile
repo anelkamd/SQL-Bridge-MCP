@@ -35,7 +35,7 @@ ENV NODE_ENV=production \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "require('./dist/db.js').testConnection().then(ok => process.exit(ok ? 0 : 1))" || exit 1
+  CMD node -e "import('./dist/db.js').then(m => m.testConnection()).then(ok => process.exit(ok ? 0 : 1))" || exit 1
 
 # Run the server
 CMD ["node", "dist/index.js"]

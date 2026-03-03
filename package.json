@@ -1,6 +1,6 @@
 {
   "name": "sql-bridge-mcp",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "MCP Server universel pour connecter les LLMs a n'importe quelle base de donnees MySQL",
   "keywords": [
     "mcp",
@@ -44,28 +44,13 @@
     "test": "node dist/client.js"
   },
   "dependencies": {
-    "@cfworker/json-schema": "latest",
-    "@modelcontextprotocol/sdk": "latest",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "dotenv": "latest",
-    "lucide-react": "^0.454.0",
-    "mysql2": "latest",
-    "next": "16.0.5",
-    "path": "latest",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7",
-    "url": "latest",
-    "zod": "latest"
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^16.4.7",
+    "mysql2": "^3.12.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "postcss": "^8.5",
-    "tailwindcss": "4.1.17",
     "typescript": "^5"
   },
   "engines": {

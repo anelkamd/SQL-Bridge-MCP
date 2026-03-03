@@ -170,15 +170,18 @@ node dist/client.js
 
 SQL Bridge MCP is configured via environment variables:
 
-| Variable                  | Description                | Default     | Required |
-| ------------------------- | -------------------------- | ----------- | -------- |
-| `MYSQL_HOST`              | Database server address    | `localhost` | No       |
-| `MYSQL_PORT`              | MySQL port                 | `3306`      | No       |
-| `MYSQL_USER`              | Database username          | `root`      | No       |
-| `MYSQL_PASSWORD`          | Database password          | (empty)     | No       |
-| `MYSQL_DATABASE`          | Database name              | (none)      | **Yes**  |
-| `MYSQL_CONNECTION_LIMIT`  | Max connections in pool    | `10`        | No       |
-| `MYSQL_CONNECT_TIMEOUT`   | Connection timeout (ms)    | `10000`     | No       |
+| Variable                  | Description                     | Default     | Required |
+| ------------------------- | ------------------------------- | ----------- | -------- |
+| `MYSQL_HOST`              | Database server address         | `localhost` | No       |
+| `MYSQL_PORT`              | MySQL port (1-65535)            | `3306`      | No       |
+| `MYSQL_USER`              | Database username               | `root`      | No       |
+| `MYSQL_PASSWORD`          | Database password               | (empty)     | No       |
+| `MYSQL_DATABASE`          | Database name                   | (none)      | **Yes**  |
+| `MYSQL_CONNECTION_LIMIT`  | Max connections in pool (1-100) | `10`        | No       |
+| `MYSQL_CONNECT_TIMEOUT`   | Connection timeout (ms)         | `10000`     | No       |
+| `MYSQL_QUERY_TIMEOUT`     | Per-query execution timeout (ms)| `30000`     | No       |
+| `RATE_LIMIT_MAX`          | Max requests per time window    | `10`        | No       |
+| `RATE_LIMIT_WINDOW_MS`    | Rate limit window (ms)          | `1000`      | No       |
 
 ### MySQL User Setup
 
@@ -362,12 +365,14 @@ Get server statistics (connection pool, rate limiter, memory).
 ### Security Features
 
 1. **Read-Only Operations**: Only SELECT queries are allowed
-2. **SQL Injection Prevention**: All queries use parameterized statements
+2. **SQL Injection Prevention**: All queries use parameterized statements (including LIMIT)
 3. **Query Validation**: Strict filtering of dangerous operations (INSERT, UPDATE, DELETE, DROP, etc.)
-4. **Rate Limiting**: Configurable request throttling (default: 10 req/sec)
-5. **Connection Pooling**: Secure connection reuse with limits
-6. **No Multiple Statements**: Protection against stacked queries
-7. **Error Sanitization**: Sensitive information is not exposed in errors
+4. **Rate Limiting**: Configurable sliding-window request throttling (default: 10 req/sec)
+5. **Query Timeout**: Per-query execution timeout (default: 30s) to prevent runaway queries
+6. **Connection Pooling**: Secure connection reuse with limits
+7. **No Multiple Statements**: Protection against stacked queries
+8. **Error Sanitization**: Sensitive information is not exposed in errors
+9. **Zod-Validated Configuration**: All environment variables are validated at startup with clear error messages
 
 ### Forbidden Operations
 
@@ -623,16 +628,25 @@ DEBUG=* sql-bridge-mcp
 ```
 sql-bridge-mcp/
 ├── src/
-│   ├── index.ts           # Entry point
-│   ├── mcp-server.ts      # MCP server implementation
-│   ├── db.ts              # Database connection module
-│   ├── queries.ts         # Reusable query functions
+│   ├── index.ts           # Entry point & graceful shutdown
+│   ├── config.ts          # Zod-validated configuration from env vars
+│   ├── db.ts              # MySQL connection pool & query execution
+│   ├── mcp-server.ts      # MCP server orchestrator
+│   ├── types.ts           # Shared TypeScript interfaces
+│   ├── validation.ts      # SQL & input validation/sanitization
+│   ├── rate-limiter.ts    # Sliding-window rate limiter
+│   ├── schema.ts          # Schema & stats helper functions
+│   ├── handlers/
+│   │   ├── tools.ts       # MCP tool definitions & execution
+│   │   ├── resources.ts   # MCP resource handlers
+│   │   └── prompts.ts     # MCP prompt templates
 │   └── client.ts          # Test client
 ├── scripts/
 │   └── schema.sql         # Test database schema
 ├── dist/                  # Compiled JavaScript (generated)
 ├── package.json           # Dependencies and scripts
 ├── tsconfig.json          # TypeScript configuration
+├── lobehub.json           # LobeHub MCP registry metadata
 ├── .env.example           # Example environment variables
 └── README.md              # This file
 ```
