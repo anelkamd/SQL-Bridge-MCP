@@ -4,64 +4,7 @@
  */
 
 import mysql, { type Pool, type RowDataPacket, type PoolOptions } from "mysql2/promise"
-import dotenv from "dotenv"
-
-dotenv.config()
-
-/**
- * Database configuration from environment variables
- */
-interface DatabaseConfig {
-  host: string
-  port: number
-  user: string
-  password: string
-  database: string
-  connectionLimit: number
-  connectTimeout: number
-  waitForConnections: boolean
-  queueLimit: number
-  enableKeepAlive: boolean
-  keepAliveInitialDelay: number
-}
-
-/**
- * Get database configuration from environment variables
- */
-function getDatabaseConfig(): DatabaseConfig {
-  return {
-    host: process.env.MYSQL_HOST || "localhost",
-    port: Number.parseInt(process.env.MYSQL_PORT || "3306", 10),
-    user: process.env.MYSQL_USER || "root",
-    password: process.env.MYSQL_PASSWORD || "",
-    database: process.env.MYSQL_DATABASE || "",
-    connectionLimit: Number.parseInt(process.env.MYSQL_CONNECTION_LIMIT || "10", 10),
-    connectTimeout: Number.parseInt(process.env.MYSQL_CONNECT_TIMEOUT || "10000", 10),
-    waitForConnections: true,
-    queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
-  }
-}
-
-/**
- * Validate database configuration
- */
-function validateConfig(config: DatabaseConfig): void {
-  if (!config.database) {
-    throw new Error(
-      "MYSQL_DATABASE environment variable is required. Please set it in your .env file or environment.",
-    )
-  }
-
-  if (config.port < 1 || config.port > 65535) {
-    throw new Error(`Invalid MYSQL_PORT: ${config.port}. Must be between 1 and 65535.`)
-  }
-
-  if (config.connectionLimit < 1 || config.connectionLimit > 100) {
-    throw new Error(`Invalid connection limit: ${config.connectionLimit}. Must be between 1 and 100.`)
-  }
-}
+import { getConfig } from "./config.js"
 
 // Singleton pool instance
 let pool: Pool | null = null
@@ -71,21 +14,20 @@ let pool: Pool | null = null
  */
 export function getPool(): Pool {
   if (!pool) {
-    const config = getDatabaseConfig()
-    validateConfig(config)
+    const { database: cfg } = getConfig()
 
     const poolConfig: PoolOptions = {
-      host: config.host,
-      port: config.port,
-      user: config.user,
-      password: config.password,
-      database: config.database,
-      waitForConnections: config.waitForConnections,
-      connectionLimit: config.connectionLimit,
-      queueLimit: config.queueLimit,
-      enableKeepAlive: config.enableKeepAlive,
-      keepAliveInitialDelay: config.keepAliveInitialDelay,
-      connectTimeout: config.connectTimeout,
+      host: cfg.host,
+      port: cfg.port,
+      user: cfg.user,
+      password: cfg.password,
+      database: cfg.database,
+      waitForConnections: true,
+      connectionLimit: cfg.connectionLimit,
+      queueLimit: 0,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
+      connectTimeout: cfg.connectTimeout,
       // Security: Disable multiple statements to prevent SQL injection
       multipleStatements: false,
       // Charset to support international characters
@@ -99,7 +41,7 @@ export function getPool(): Pool {
 }
 
 /**
- * Execute a parameterized SQL query
+ * Execute a parameterized SQL query with a per-query timeout.
  * @param sql - SQL query with placeholders (?)
  * @param params - Parameters to bind to the query
  * @returns Query results
@@ -108,12 +50,21 @@ export async function query<T extends RowDataPacket[]>(
   sql: string,
   params: (string | number | boolean | null)[] = [],
 ): Promise<T> {
+  const { database: cfg } = getConfig()
+
   try {
     const p = getPool()
-    const [rows] = await p.query<T>(sql, params)
-    return rows
+    const conn = await p.getConnection()
+
+    try {
+      // Set a per-query timeout to prevent long-running queries
+      await conn.query(`SET SESSION MAX_EXECUTION_TIME = ${cfg.queryTimeout}`)
+      const [rows] = await conn.query<T>(sql, params)
+      return rows
+    } finally {
+      conn.release()
+    }
   } catch (error) {
-    // Log the error but don't expose sensitive SQL details
     console.error("[SQL Bridge] Query error:", error instanceof Error ? error.message : String(error))
     throw new Error("Database query failed. Please check your query syntax and parameters.")
   }
@@ -137,7 +88,6 @@ export async function closePool(): Promise<void> {
 
 /**
  * Test database connectivity
- * @returns true if connection is successful, false otherwise
  */
 export async function testConnection(): Promise<boolean> {
   try {
@@ -163,12 +113,12 @@ export async function testConnection(): Promise<boolean> {
  * Get the name of the connected database
  */
 export function getDatabaseName(): string {
-  const config = getDatabaseConfig()
-  return config.database
+  return getConfig().database.database
 }
 
 /**
- * Get connection pool statistics
+ * Get connection pool statistics.
+ * Returns zeroes if the pool is not yet initialised.
  */
 export function getPoolStats(): {
   totalConnections: number
@@ -176,18 +126,20 @@ export function getPoolStats(): {
   idleConnections: number
 } {
   if (!pool) {
-    return {
-      totalConnections: 0,
-      activeConnections: 0,
-      idleConnections: 0,
-    }
+    return { totalConnections: 0, activeConnections: 0, idleConnections: 0 }
   }
 
-  // @ts-ignore - Accessing private pool properties for monitoring
-  const poolStats = pool.pool
+  // mysql2 exposes an internal .pool property on the PromisePool wrapper.
+  // Cast through `unknown` to avoid @ts-ignore.
+  const inner = (pool as unknown as { pool: {
+    _allConnections?: unknown[]
+    _acquiringConnections?: unknown[]
+    _freeConnections?: unknown[]
+  } }).pool
+
   return {
-    totalConnections: poolStats?._allConnections?.length || 0,
-    activeConnections: poolStats?._acquiringConnections?.length || 0,
-    idleConnections: poolStats?._freeConnections?.length || 0,
+    totalConnections: inner?._allConnections?.length ?? 0,
+    activeConnections: inner?._acquiringConnections?.length ?? 0,
+    idleConnections: inner?._freeConnections?.length ?? 0,
   }
 }

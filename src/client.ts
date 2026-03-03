@@ -107,7 +107,8 @@ async function main() {
     console.log(`Found ${tools.tools.length} tools:\n`)
     tools.tools.forEach((t, i) => {
       console.log(`${i + 1}. ${t.name}`)
-      console.log(`   Description: ${t.description.split("\n")[0]}`)
+      const desc = typeof t.description === "string" ? t.description.split("\n")[0] : "(no description)"
+      console.log(`   Description: ${desc}`)
     })
 
     // Test 2: List tables

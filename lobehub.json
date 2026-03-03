@@ -1,13 +1,27 @@
 {
   "$schema": "https://registry.lobehub.com/schema.json",
   "identifier": "sql-bridge-mcp",
-  "author": "SQL Bridge Contributors",
+  "version": "2.0.0",
+  "author": "anelkamd",
   "meta": {
     "avatar": "🔗",
-    "tags": ["database", "mysql", "sql", "query", "natural-language"],
+    "tags": [
+      "mcp",
+      "model-context-protocol",
+      "database",
+      "mysql",
+      "sql",
+      "query",
+      "natural-language",
+      "llm",
+      "ai",
+      "claude",
+      "read-only",
+      "security"
+    ],
     "title": "SQL Bridge MCP",
-    "description": "Universal MCP server for connecting AI assistants to MySQL databases with natural language queries",
-    "systemRole": "You are a helpful SQL assistant with access to a MySQL database. Help users explore and query their data using natural language or SQL SELECT statements."
+    "description": "Universal MCP server for connecting AI assistants to MySQL databases. Provides secure, read-only SQL querying with natural language support, schema discovery, rate limiting, and parameterized queries to prevent SQL injection.",
+    "systemRole": "You are a helpful SQL assistant with access to a MySQL database via SQL Bridge MCP. You can explore the database schema, list tables, describe columns, view sample data, and execute read-only SELECT queries. Always use the available tools to answer data questions. Only SELECT queries are permitted — all write operations are blocked for security."
   },
   "config": {
     "type": "stdio",
@@ -16,31 +30,96 @@
     "env": {
       "MYSQL_HOST": {
         "type": "string",
-        "description": "MySQL server hostname",
+        "description": "MySQL server hostname or IP address",
         "default": "localhost"
       },
       "MYSQL_PORT": {
         "type": "number",
-        "description": "MySQL server port",
+        "description": "MySQL server port number (1-65535)",
         "default": 3306
       },
       "MYSQL_USER": {
         "type": "string",
-        "description": "MySQL username",
+        "description": "MySQL username (recommended: create a dedicated read-only user with SELECT-only permissions)",
         "required": true
       },
       "MYSQL_PASSWORD": {
         "type": "string",
-        "description": "MySQL password",
+        "description": "MySQL password for the specified user",
         "required": true
       },
       "MYSQL_DATABASE": {
         "type": "string",
-        "description": "MySQL database name",
+        "description": "Name of the MySQL database to connect to",
         "required": true
+      },
+      "MYSQL_CONNECTION_LIMIT": {
+        "type": "number",
+        "description": "Maximum number of connections in the pool (1-100)",
+        "default": 10
+      },
+      "MYSQL_CONNECT_TIMEOUT": {
+        "type": "number",
+        "description": "Connection timeout in milliseconds",
+        "default": 10000
+      },
+      "MYSQL_QUERY_TIMEOUT": {
+        "type": "number",
+        "description": "Per-query execution timeout in milliseconds",
+        "default": 30000
       }
     }
   },
+  "tools": [
+    {
+      "name": "query_database",
+      "description": "Execute a natural language question or SQL SELECT query against the MySQL database. Returns schema context for natural language questions, or query results for SQL. Only SELECT is allowed — all write operations are blocked."
+    },
+    {
+      "name": "list_tables",
+      "description": "List all tables in the connected database with their row counts and comments."
+    },
+    {
+      "name": "describe_table",
+      "description": "Get the full column-level schema of a specific table, including column names, types, nullability, keys, defaults, and comments."
+    },
+    {
+      "name": "sample_data",
+      "description": "Retrieve sample rows from a specific table to preview its data structure and content."
+    },
+    {
+      "name": "get_schema",
+      "description": "Get the complete database schema — all tables with all their columns, types, keys, and row counts."
+    },
+    {
+      "name": "server_stats",
+      "description": "Get server health statistics including connection pool status, rate limiter state, uptime, and memory usage."
+    }
+  ],
+  "resources": [
+    {
+      "uri": "sqlbridge://schema",
+      "name": "Database Schema",
+      "description": "Complete database schema with all tables, columns, types, keys, and row counts as JSON.",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "sqlbridge://stats",
+      "name": "Server Statistics",
+      "description": "Live server statistics including connection pool, rate limiter, uptime, and memory usage as JSON.",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "sql_assistant",
+      "description": "Interactive SQL assistant pre-loaded with the database schema. Helps users explore data, write queries, and understand results."
+    },
+    {
+      "name": "data_analyst",
+      "description": "Data analysis assistant that generates insights from the database. Accepts an optional 'focus' argument to target a specific analysis area (e.g., sales, users, performance)."
+    }
+  ],
   "homepage": "https://github.com/anelkamd/sql-bridge-mcp",
   "repository": {
     "type": "git",
